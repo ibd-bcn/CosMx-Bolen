@@ -4,6 +4,9 @@ library(ggrepel)
 library(msigdbr)
 library(clusterProfiler)
 library(org.Hs.eg.db)
+library(plyr)
+library(ggdark)
+library(dplyr)
 options(bitmapType = "cairo")
 
 ## Data ------------------------------------------------------------------------
@@ -101,8 +104,6 @@ subset_col <- c(
   "other" =  "#4b4b4b"
 )
 
-4b4b4b
-#515151
 ##Functions --------------------------------------------------------------------
 
 #Volcano
@@ -150,11 +151,11 @@ volcano <-
              )) +
       geom_point(size = 3) +
       theme_bw() +
-      geom_text_repel(size = 8) +
+      geom_text_repel(size = 8, max.overlaps = 8) +
       scale_color_manual(
         values = c(
-          "p.val<0.05 & FC<0.83" = "green",
-          "p.adj<0.05 & FC<0.83" = "darkgreen",
+          "p.val<0.05 & FC<0.83" = "#5cbde7",
+          "p.adj<0.05 & FC<0.83" = "darkblue",
           "p.val<0.05 & FC>1.2" = "red",
           "p.adj<0.05 & FC>1.2" = "darkred"
         )
@@ -228,6 +229,15 @@ pathway_anal <-
     final_enrichment_result$Description <-
       factor(final_enrichment_result$Description,
              levels = final_enrichment_result$Description)
+    format_pathway <- function(pathway) {
+      pathway <- sub("_", ": ", pathway)
+      pathway <- gsub("_", " ", pathway)
+      return(pathway)
+    }
+    final_enrichment_result$Description <- sapply(final_enrichment_result$Description, format_pathway)
+    
+    
+    
     p <-
       ggplot(final_enrichment_result,
              aes(
@@ -238,8 +248,8 @@ pathway_anal <-
              )) +
       geom_point() +
       scale_color_manual(values = c(
-        "Upregulated" = "red",
-        "Downregulated" = "blue"
+        "Upregulated" = "darkred",
+        "Downregulated" = "darkblue"
       )) +
       scale_size_continuous(
         name = "Gene ratio",
@@ -258,13 +268,13 @@ pathway_anal <-
       ) +
       theme(
         text = element_text(family = "Helvetica"),
-        plot.title = element_text(face = "bold", size = 14),
-        axis.title.x = element_text(face = "bold", size = 12),
-        axis.title.y = element_text(face = "bold", size = 12),
-        axis.text = element_text(size = 10),
-        legend.text = element_text(size = 10),
-        legend.title = element_text(face = "bold", size = 10)
-      )
+        plot.title = element_text(face = "bold", size = text_size),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = text_size),
+        legend.text = element_text(size = text_size),
+        legend.title = element_text(face = "bold", size = text_size)
+      ) + guides(color = guide_legend(override.aes = list(size = 5)))
     return(p)
   }
 
@@ -298,7 +308,7 @@ plot_pol <- function(object,
     mols <- mols[mols$cell %in% cells,] 
     mols <- mols[mols$target %in% genes,]
     p <- p + geom_point(data = mols, aes(x = x_global_px, y =y_global_px, color = target), size = pt_size) +
-      scale_color_manual(values = c("FERT" = "orange")) + guides(color = guide_legend(override.aes = list(size = 5))) 
+      scale_color_manual(values = c("FERT" = "#FFD700")) + guides(color = guide_legend(override.aes = list(size = 5))) 
     
   }
   
@@ -376,7 +386,7 @@ p <- plot_pol(
   mols_c = TRUE,
   mols = mols,
   poly = poly,
-  pt_size =1,
+  pt_size =2,
   genes ="FERT")
 png(
   filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3Ai.png",
@@ -394,13 +404,13 @@ mmtt[mmtt$subset != c("epi"),]$subset <- "other"
 
 p <- plot_pol(
   object = mmtt,
-  fov = "26",
+  fov = "13",
   annotation = "subset",
   pal = subset_col,
   mols_c = TRUE,
   mols = mols,
   poly = poly,
-  pt_size =0.5,
+  pt_size =2,
   genes ="FERT")
 png(
   filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3Aii.png",
@@ -430,13 +440,13 @@ p <-
     id2 = "NHC",
     deg_results = df,
     max = 10,
-    cat = "C7",
-    text_size =  2
+    cat = "C5",
+    text_size =  20
   )
 png(
   filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3B.png",
-  width = 30,
-  height = 10,
+  width = 16,
+  height = 12,
   units = "in",
   res = 800
 )
@@ -472,13 +482,13 @@ mmtt[mmtt$subset != c("epi"),]$subset <- "other"
 
 p <- plot_pol(
   object = mmtt,
-  fov = "26",
+  fov = "10",
   annotation = "subset",
   pal = subset_col,
   mols_c = TRUE,
   mols = mols,
   poly = poly,
-  pt_size =0.5,
+  pt_size =2,
   genes ="FERT")
 png(
   filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3Ci.png",
@@ -496,13 +506,13 @@ mmtt[mmtt$subset != c("epi"),]$subset <- "other"
 
 p <- plot_pol(
   object = mmtt,
-  fov = "26",
+  fov = "30",
   annotation = "subset",
   pal = subset_col,
   mols_c = TRUE,
   mols = mols,
   poly = poly,
-  pt_size =0.5,
+  pt_size =2,
   genes ="FERT")
 png(
   filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3Cii.png",
@@ -532,13 +542,13 @@ p <-
     id2 = "NHC",
     deg_results = df,
     max = 10,
-    cat = "C7",
-    text_size =  2
+    cat = "C5",
+    text_size =  20
   )
 png(
   filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3D.png",
-  width = 30,
-  height = 10,
+  width = 20,
+  height = 12,
   units = "in",
   res = 800
 )
@@ -553,7 +563,7 @@ p <-
     anot = "refined",
     ct = "Colonocytes" ,
     seu = seu ,
-    id1 = "PD",
+    id1 = "IBD",
     id2 = "NHC" ,
     dif_col = "tissue"
   )
@@ -574,13 +584,13 @@ mmtt[mmtt$refined != c("Colonocytes"),]$refined <- "other"
 
 p <- plot_pol(
   object = mmtt,
-  fov = "26",
+  fov = "11",
   annotation = "refined",
   pal = refined_col,
   mols_c = TRUE,
   mols = mols,
   poly = poly,
-  pt_size =1.5,
+  pt_size =2,
   genes ="FERT")
 png(
   filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3Ei.png",
@@ -598,13 +608,13 @@ mmtt[mmtt$refined != c("Colonocytes"),]$refined <- "other"
 
 p <- plot_pol(
   object = mmtt,
-  fov = "26",
+  fov = "13",
   annotation = "refined",
   pal = refined_col,
   mols_c = TRUE,
   mols = mols,
   poly = poly,
-  pt_size =1.5,
+  pt_size =2,
   genes ="FERT")
 png(
   filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3Eii.png",
@@ -634,13 +644,13 @@ p <-
     id2 = "NHC",
     deg_results = df,
     max = 10,
-    cat = "C7",
-    text_size =  2
+    cat = "C5",
+    text_size =  20
   )
 png(
   filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3F.png",
-  width = 30,
-  height = 10,
+  width = 16,
+  height = 12,
   units = "in",
   res = 800
 )
@@ -661,7 +671,7 @@ p <-
   )
 p <- p[[1]]
 png(
-  filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3E.png",
+  filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3G.png",
   width = 12,
   height = 9,
   units = "in",
@@ -676,16 +686,16 @@ mmtt[mmtt$refined != c("Colonocytes"),]$refined <- "other"
 
 p <- plot_pol(
   object = mmtt,
-  fov = "26",
+  fov = "10",
   annotation = "refined",
   pal = refined_col,
   mols_c = TRUE,
   mols = mols,
   poly = poly,
-  pt_size =1.5,
+  pt_size =2,
   genes ="FERT")
 png(
-  filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3Ei.png",
+  filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3Gi.png",
   width = 13,
   height = 10,
   units = "in",
@@ -700,16 +710,16 @@ mmtt[mmtt$refined != c("Colonocytes"),]$refined <- "other"
 
 p <- plot_pol(
   object = mmtt,
-  fov = "26",
+  fov = "30",
   annotation = "refined",
   pal = refined_col,
   mols_c = TRUE,
   mols = mols,
   poly = poly,
-  pt_size =1.5,
+  pt_size =2,
   genes ="FERT")
 png(
-  filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3Eii.png",
+  filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3Gii.png",
   width = 13,
   height = 10,
   units = "in",
@@ -736,13 +746,13 @@ p <-
     id2 = "NHC",
     deg_results = df,
     max = 10,
-    cat = "C7",
-    text_size =  2
+    cat = "C5",
+    text_size =  20
   )
 png(
   filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3H.png",
-  width = 30,
-  height = 10,
+  width = 16,
+  height = 12,
   units = "in",
   res = 800
 )
