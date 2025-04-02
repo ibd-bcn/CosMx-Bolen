@@ -1,6 +1,6 @@
 # 𖤓 Welcome to Bolen et. al 𖤓
 
-This repository accompanies the paper **"Single-cell multiomics identifies unique features of immune dysfunction in the colon, blood and stool from individuals diagnosed with Parkinson’s disease or Inflammatory bowel disease"**, presenting all analyses conducted as part of the study. Our work focuses on the relationship between Parkinson Disease(PD) and Inflammatory Bowel Disease (IBD). 
+This repository accompanies the paper **"Single-cell multiomics identifies both shared and unique features of immune dysfunction in the colon, plasma and stool from individuals diagnosed with Parkinson’s disease or inflammatory bowel disease"**, presenting all analyses conducted as part of the study. Our work focuses on the relationship between Parkinson Disease(PD) and Inflammatory Bowel Disease (IBD). 
 
 ![](image.png)
 
