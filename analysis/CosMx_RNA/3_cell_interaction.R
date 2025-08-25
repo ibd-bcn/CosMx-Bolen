@@ -13,6 +13,8 @@ seu <-
     "analysis/CosMx_RNA/Objects/seurats_all_norm.RDS"
   )
 
+#Log-Normalize the data
+seu <- NormalizeData(seu)
 #Obtain files for each FOV to perform SCOTIA
 genes <- rownames(seu)
 meta_seu <- as.data.frame(seu@meta.data)
