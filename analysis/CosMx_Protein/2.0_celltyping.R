@@ -3,7 +3,7 @@ library(dplyr)
 #Read single cell object of REFERENCE Trigo. et al -----------------------------
 todas <-
   readRDS(
-    "/home/acorraliza/data_Albas/All_Together_31082021/piezas_finales/tog_numeric.RDS"
+    "data/single_cell_ref.RDS"
   )
 
 cells <-
@@ -65,11 +65,11 @@ DimPlot(todas_cut, group.by = "anot_maxfuse", label = TRUE)
 #Save CSV files Maxfuse --------------------------------------------------------
 write.csv(
   todas_cut@assays$RNA$counts,
-  "~/SPATIAL/Mackensy_analysis/CosMx_RNA/1_Annotation/Objects/counts_SC_cut.csv"
+  "analysis/CosMx_Protein/Objects/counts_SC_cut.csv"
 )
 write.csv(
   todas_cut@meta.data,
-  "~/SPATIAL/Mackensy_analysis/CosMx_RNA/1_Annotation/Objects/meta_SC_cut.csv"
+  "analysis/CosMx_Protein/Objects/meta_SC_cut.csv"
 )
 
 #Create correspondence matrix
@@ -223,7 +223,7 @@ protein_gene_df <-
 protein_gene_df <- na.omit(protein_gene_df)
 write.csv(
   protein_gene_df,
-  "~/SPATIAL/Mackensy_analysis/CosMx_Prot/protein_gene_conversion.csv",
+  "analysis/CosMx_Protein/Objects/protein_gene_conversion.csv",
   row.names = FALSE
 )
 

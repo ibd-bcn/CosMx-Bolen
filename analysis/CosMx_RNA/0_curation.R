@@ -91,7 +91,7 @@ fov_tissue_dict <- setNames(tissue, fov)
 fov_patient_dict <- setNames(patients, fov)
 #Read RAW FILES-----------------------------------------------------------------
 c <-
-  list.dirs(path = "~/SPATIAL/Mackensy_analysis/CosMx_RNA/raw_data", recursive = F)[1]
+  list.dirs(path = "data/raw_data", recursive = F)[1]
 #Obtain list for each cell
 setwd(c)
 #Raw
@@ -117,7 +117,7 @@ pols <- read_csv(list.files(pattern = "polygons.csv"))
 write.csv(
   pols,
   paste0(
-    "~/SPATIAL/Mackensy_analysis/CosMx_RNA/0_Curation/Polygons/",
+    "analysis/CosMx_RNA/Polygons/",
     strsplit(c, "/")[[1]][8],
     ".csv",
     sep = ""
@@ -129,7 +129,7 @@ mols <- mols[mols$cell_ID != 0,]
 write.csv(
   mols,
   paste0(
-    "~/SPATIAL/Mackensy_analysis/CosMx_RNA/0_Curation/Molecules/",
+    "analysis/CosMx_RNA/Molecules/Molecules/",
     strsplit(c, "/")[[1]][8],
     ".csv",
     sep = ""
@@ -153,7 +153,7 @@ seurats[["SystemControl"]] <-
 
 #SaveRDS
 saveRDS(seurats,
-        "~/SPATIAL/Mackensy_analysis/CosMx_RNA/0_Curation/Objects/seurats.RDS")
+        "analysis/CosMx_RNA/Objects/seurats.RDS")
 
 #Quality Control ---------------------------------------------------------------
 
@@ -270,12 +270,12 @@ message(paste0("A total of ", sum(seurats$pass == 1)), " cells have passed the E
 #SaveRDS with ALL cells
 saveRDS(
   seurats,
-  "~/SPATIAL/Mackensy_analysis/CosMx_RNA/0_Curation/Objects/qc_seurats.RDS"
+  "analysis/CosMx_RNA/Objects/qc_seurats.RDS"
 )
 
 #SaveRDS only cells that have passed QC
 saveRDS(
   seurats[, rownames(seurats@meta.data[seurats@meta.data$pass == 1,])],
-  "~/SPATIAL/Mackensy_analysis/CosMx_RNA/0_Curation/Objects/qc_seurats_pass.RDS"
+  "analysis/CosMx_RNA/Objects/qc_seurats_pass.RDS"
 )
 

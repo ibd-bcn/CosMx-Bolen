@@ -11,12 +11,14 @@ library(ggrepel)
 library(readxl)
 
 ## Prepare protein data --------------------------------------------------------
-cos <- read_excel("CosMx_Prot/3_SCOTIA/Ensembl Cosmx protein.xlsx")
+cos <- read_excel("analysis/CosMx_Protein/Objects/Ensembl Cosmx protein.xlsx")
 dic <- cos$`Protein Name`
 names(dic) <- cos$`Ensembl Prot. code`
+#Read protein links https://string-db.org/cgi/download?species_text=Homo+sapiens
+#9606.protein.links.v12.0.txt.gz
 df <-
   read.table(
-    "~/SPATIAL/Mackensy_analysis/CosMx_Prot/3_SCOTIA/9606.protein.links.v12.0.txt",
+    "data/9606.protein.links.v12.0.txt",
     header = TRUE,
     sep = " ",
     stringsAsFactors = FALSE
@@ -31,17 +33,17 @@ df$protein1 <- dic[df$protein1]
 df$protein2 <- dic[df$protein2]
 
 norm <-
-  readRDS("~/SPATIAL/Mackensy_analysis/CosMx_Prot/01_Normalization/norm.RDS")
+  readRDS("analysis/CosMx_Protein/Objects/norm.RDS")
 
 norm <- norm[unique(c(df$protein1, df$protein2)), ]
 genes <- rownames(norm)
 
 df_unique <- df[, c(1, 2)]
 write.csv(df_unique,
-          "~/SPATIAL/Mackensy_analysis/CosMx_Prot/3_SCOTIA/db.csv")
+          "analysis/CosMx_Protein/Objects/db.csv")
 
 ## Create intermediate files ---------------------------------------------------
-meta <- read_csv("CosMx_Prot/02_celltyping/meta.csv")
+meta <- read_csv("analysis/CosMx_Protein/Results/meta.csv")
 seu <- norm
 seu$subset <-
   mapvalues(x = seu$cell_id ,
@@ -50,7 +52,7 @@ seu$subset <-
 genes <- rownames(seu)
 meta_seu <- as.data.frame(seu@meta.data)
 write_csv(meta_seu,
-          "~/SPATIAL/Mackensy_analysis/CosMx_Prot/3_SCOTIA/Files/meta_seu.csv")
+          "analysis/CosMx_Protein/Files/meta_seu.csv")
 patients <- unique(seu$patient)
 
 for (patient in patients) {
@@ -63,7 +65,7 @@ for (patient in patients) {
   cords <- meta[, c("CenterX_global_px", "CenterY_global_px")]
   x_pos <- cords$CenterX_global_px
   y_pos <- cords$CenterY_global_px
-  
+
   #Patient
   df <- data.frame(
     cell_id = cell_id,
@@ -72,19 +74,19 @@ for (patient in patients) {
     x_positions = x_pos,
     y_positions = y_pos
   )
-  
-  
-  
+
+
+
   write_csv(
     df,
     paste0(
-      "~/SPATIAL/Mackensy_analysis/CosMx_Prot/3_SCOTIA/Files/",
+      "analysis/CosMx_Protein/Files/",
       patient,
       "_meta_def.csv",
       sep = ""
     )
   )
-  
+
   #Exp
   data_ex <- as.data.frame(seu@assays$Prot$data)
   data_ex <- as.data.frame(t(data_ex[, cell_id]))
@@ -92,17 +94,17 @@ for (patient in patients) {
   data_ex$cell_id <- rownames(data_ex)
   data_ex$fov <- df$fov
   data_ex <- data_ex[c("cell_id", "fov", genes)]
-  
+
   write_csv(
     data_ex,
     paste0(
-      "~/SPATIAL/Mackensy_analysis/CosMx_Prot/3_SCOTIA/Files/",
+      "analysis/CosMx_Protein/Files/",
       patient,
       "_exp_def.csv",
       sep = ""
     )
   )
-  
+
 }
 
 ## LR database -----------------------------------------------------------------
@@ -110,17 +112,17 @@ for (patient in patients) {
 colnames(df_unique) <- c("l_gene", "r_gene")
 
 write_csv(df_unique,
-          "~/SPATIAL/Mackensy_analysis/CosMx_Prot/3_SCOTIA/Files/lr_pair.csv")
+          "analysis/CosMx_Protein/Files/lr_pair.csv")
 
 ## Run SCOTIA ------------------------------------------------------------------
 system(
-  "taskset -c 0-20 python3 ~/SPATIAL/Mackensy_analysis/CosMx_Prot/3_SCOTIA/scotia_cell_int.py"
+  "taskset -c 0-20 python3 analysis/CosMx_Protein/scotia_cell_int.py"
 )
 
 ## Create a file for final interactions ----------------------------------------
 
 meta_seu <-
-  read_csv("/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_Prot/3_SCOTIA/Files/meta_seu.csv")
+  read_csv("analysis/CosMx_Protein/Files/meta_seu.csv")
 col_names <-
   c(
     "source_cell_idx",
@@ -142,11 +144,11 @@ patients <- unique(meta_seu$patient)
 
 for (patient in patients) {
   fovs <- unique(meta_seu[meta_seu$patient == patient, ]$fov)
-  
+
   for (fov in fovs) {
     if (file.exists(
       paste0(
-        "/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_Prot/3_SCOTIA/Files/",
+        "analysis/CosMx_Protein/Files/",
         patient,
         "_fov_",
         fov,
@@ -157,7 +159,7 @@ for (patient in patients) {
       meta <-
         read_delim(
           paste0(
-            "/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_Prot/3_SCOTIA/Files/",
+            "analysis/CosMx_Protein/Files/",
             patient,
             "_fov_",
             fov,
@@ -168,11 +170,11 @@ for (patient in patients) {
           escape_double = FALSE,
           trim_ws = TRUE
         )
-      
+
       ot <-
         read_delim(
           paste0(
-            "/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_Prot/3_SCOTIA/Files/",
+            "analysis/CosMx_Protein/Files/",
             patient,
             "_fov_",
             fov,
@@ -183,7 +185,7 @@ for (patient in patients) {
           escape_double = FALSE,
           trim_ws = TRUE
         )
-      
+
       ot$id_source <-
         mapvalues(
           x = ot$source_cell_idx,
@@ -234,7 +236,7 @@ for (patient in patients) {
             warn_missing = F
           )
         )
-      
+
       ot$fov <-
         as.numeric(
           mapvalues(
@@ -244,21 +246,21 @@ for (patient in patients) {
             warn_missing = F
           )
         )
-      
-      
-      
-      
+
+
+
+
       df <- rbind(df, ot)
     }
-    
-    
+
+
   }
-  
+
 }
 
 #Save final result
 write_csv(
   df,
-  "/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_Prot/3_SCOTIA/Results/all_int.csv"
+  "analysis/CosMx_Protein/Results/all_int.csv"
 )
 

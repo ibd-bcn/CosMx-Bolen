@@ -89,7 +89,7 @@ fov_tissue_dict <- setNames(tissue, fov)
 fov_patient_dict <- setNames(patients, fov)
 #Read RAW FILES-----------------------------------------------------------------
 c <-
-  list.dirs(path = "~/SPATIAL/Mackensy_analysis/CosMx_Prot/Raw_data", recursive = F)[1]
+  list.dirs(path = "data/", recursive = F)[1]
 #Obtain list for each cell
 setwd(c)
 #Raw
@@ -111,7 +111,7 @@ pols <- read_csv(list.files(pattern = "polygons.csv"))
 write.csv(
   pols,
   paste0(
-    "~/SPATIAL/Mackensy_analysis/CosMx_Prot/0_Curation/Polygons/",
+    "analysis/CosMx_Protein/Polygons/",
     strsplit(c, "/")[[1]][8],
     ".csv",
     sep = ""
@@ -131,7 +131,7 @@ seurats[["Negprob"]] <-
 #SaveRDS
 saveRDS(
   seurats,
-  "~/SPATIAL/Mackensy_analysis/CosMx_Prot/0_Curation/Objects/seurats.RDS"
+  "analysis/CosMx_Protein/Objects/seurats.RDS"
 )
 
 
@@ -217,24 +217,24 @@ message(paste0("A total of ", sum(seurats$pass == 1)), " cells have passed the E
 ## Save QC --- -----------------------------------------------------------------
 saveRDS(
   seurats,
-  "~/SPATIAL/Mackensy_analysis/CosMx_Prot/0_Curation/Objects/qc_seurats.RDS"
+  "analysis/CosMx_Protein/Objects/qc_seurats.RDS"
 )
 #SaveRDS of filtered seurat
 seurats_c <-
   seurats[, rownames(seurats@meta.data[seurats@meta.data$pass == 1, ])]
 saveRDS(
   seurats_c,
-  "~/SPATIAL/Mackensy_analysis/CosMx_Prot/0_Curation/Objects/qc_seurats_filt.RDS"
+  "analysis/CosMx_Protein/Objects/qc_seurats_filt.RDS"
 )
 
 #Save objects for further analysis
 write.csv(
   seurats_c@meta.data,
-  "~/SPATIAL/Mackensy_analysis/CosMx_Prot/0_Curation/Objects/meta.csv"
+  "analysis/CosMx_Protein/Objects/meta.csv"
 )
 saveRDS(
   seurats_c@assays$Prot$counts,
-  "~/SPATIAL/Mackensy_analysis/CosMx_Prot/0_Curation/Objects/counts.RDS"
+  "analysis/CosMx_Protein/Objects/counts.RDS"
 )
 
 

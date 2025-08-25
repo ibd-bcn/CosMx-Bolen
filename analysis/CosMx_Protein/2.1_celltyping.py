@@ -15,17 +15,17 @@ import maxfuse as mf
 import seaborn as sns
 
 # Create Anndata for RNA SINGLE CELL
-count_matrix = pd.read_csv('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/1_Annotation/Objects/counts_SC_cut.csv', index_col=0)  
-metadata = pd.read_csv('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/1_Annotation/Objects/meta_SC_cut.csv', index_col=0)  
+count_matrix = pd.read_csv('analysis/CosMx_Protein/Objects/counts_SC_cut.csv', index_col=0)  
+metadata = pd.read_csv('analysis/CosMx_Protein/Objects/meta_SC_cut.csv', index_col=0)  
 rna_adata = ad.AnnData(X=count_matrix.T)
 rna_adata.obs = metadata
 
 #Create Anndata for protein
-count_protein = pd.read_csv('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_Prot/0_Curation/Objects/counts.csv', index_col=0)  
-norm_protein = pd.read_csv('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_Prot/02_celltyping/counts.csv', index_col=0)  
+count_protein = pd.read_csv('analysis/CosMx_Protein/Objects/counts.csv', index_col=0)  
+norm_protein = pd.read_csv('analysis/CosMx_Protein/Objects/counts.csv', index_col=0)  
 protein_adata = ad.AnnData(X= norm_protein.T )
 
-correspondence = pd.read_csv('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_Prot/protein_gene_conversion.csv')
+correspondence = pd.read_csv('analysis/CosMx_Protein/Objects/protein_gene_conversion.csv')
 
 rna_protein_correspondence = []
 
@@ -196,5 +196,5 @@ connections = pd.DataFrame(list(zip(full_matching[0], full_matching[1], full_mat
              columns = ['mod1_indx', 'mod2_indx', 'score'])
 # columns: cell idx in mod1, cell idx in mod2, and matching scores
 
-connections.to_csv("connections.csv")
+connections.to_csv("analysis/CosMx_Protein/Objects/connections.csv")
 

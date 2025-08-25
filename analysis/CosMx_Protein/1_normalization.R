@@ -4,7 +4,7 @@ library(TidyDensity)
 ## Read object -----------------------------------------------------------------
 seu <-
   readRDS(
-    "~/SPATIAL/Mackensy_analysis/CosMx_Prot/0_Curation/Objects/qc_seurats_filt.RDS"
+    "analysis/CosMx_Protein/Objects/qc_seurats_filt.RDS"
   )
 
 ## Normalize -------------------------------------------------------------------
@@ -20,4 +20,4 @@ arcsinh_data <- asinh(scaled_data / cofactor)
 
 seu@assays$Prot$data <- arcsinh_data
 saveRDS(seu,
-        "~/SPATIAL/Mackensy_analysis/CosMx_Prot/01_Normalization/norm.RDS")
+        "analysis/CosMx_Protein/Objects/norm.RDS")

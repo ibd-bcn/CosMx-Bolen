@@ -1,4 +1,4 @@
-#SCOTIA
+#Environment present in requirements.txt
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -21,16 +21,16 @@ def read_data(file):
     return df
   
 
-known_lr_pairs = pd.read_csv('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Files/lr_pair.csv',sep=',', index_col = None)
+known_lr_pairs = pd.read_csv('analysis/CosMx_RNA/Files/lr_pair.csv',sep=',', index_col = None)
 print(known_lr_pairs.head())
 
 samples = [f"patient{i}" for i in range(1, 34)]
 
 for patient in samples:
     
-  meta_df = pd.read_csv('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Files/'+patient+'_meta_def.csv',sep=',',index_col=None)
+  meta_df = pd.read_csv('analysis/CosMx_RNA/Files/'+patient+'_meta_def.csv',sep=',',index_col=None)
   print(meta_df.head())
-  exp_df = pd.read_csv('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Files/'+patient+'_exp_def.csv',sep=',',index_col=None)
+  exp_df = pd.read_csv('analysis/CosMx_RNA/Files/'+patient+'_exp_def.csv',sep=',',index_col=None)
   print(exp_df.head())
   
   #Obtain all FOVS
@@ -43,7 +43,7 @@ for patient in samples:
       cell_idx = []
       meta_df_fov = meta_df[meta_df['fov']==fov]
       meta_df_fov['index'] = range(meta_df_fov.shape[0])
-      meta_df_fov.to_csv('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Files/'+patient+'_fov_'+str(fov)+".csv",header = True, index = False, sep = "\t")
+      meta_df_fov.to_csv('analysis/CosMx_RNA/Files/'+patient+'_fov_'+str(fov)+".csv",header = True, index = False, sep = "\t")
   
       cell_type_l = list(set(meta_df_fov['annotation']))
       
@@ -61,7 +61,7 @@ for patient in samples:
                   
                   
       tmp_df = pd.DataFrame([celltype,cell_idx]).T
-      np.save('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Files/'+patient+'_fov_'+str(fov)+'_dbscan.cell.clusters.test',tmp_df)
+      np.save('analysis/CosMx_RNA/Files/'+patient+'_fov_'+str(fov)+'_dbscan.cell.clusters.test',tmp_df)
         
   #ot 
   #gene expression normalization factor
@@ -73,7 +73,7 @@ for patient in samples:
   for fov in set(meta_df['fov']):
       print(fov)
       #clustering result
-      cluster_df = pd.DataFrame(np.load('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Files/'+patient+'_fov_'+str(fov)+'_dbscan.cell.clusters.test.npy',allow_pickle=True))
+      cluster_df = pd.DataFrame(np.load('analysis/CosMx_RNA/Files/'+patient+'_fov_'+str(fov)+'_dbscan.cell.clusters.test.npy',allow_pickle=True))
       cluster_df.columns = ['cell_type','cell_idx']
       
       #coordinates
@@ -98,9 +98,9 @@ for patient in samples:
       
       if ga_df_final.shape[0]>0:
           ga_df_final.columns = ['source_cell_idx','receptor_cell_idx','likelihood','ligand_recptor','source_cell_type','target_cell_type']
-          ga_df_final.to_csv('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Files/'+patient+'_fov_'+str(fov)+".ot.csv",header = True, index = False, sep = "\t")
+          ga_df_final.to_csv('analysis/CosMx_RNA/Files/'+patient+'_fov_'+str(fov)+".ot.csv",header = True, index = False, sep = "\t")
   
           #post-processing of ot results by calculating averaged likelihoods
           ga_df_final['cell_pairs'] = ga_df_final['source_cell_type']+"_"+ga_df_final['target_cell_type']
-          ga_df_final.to_csv('/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Files/'+patient+'_fov_'+str(fov)+".ot.csv",header = True, index = False, sep = "\t")
+          ga_df_final.to_csv('analysis/CosMx_RNA/Files/'+patient+'_fov_'+str(fov)+".ot.csv",header = True, index = False, sep = "\t")
         

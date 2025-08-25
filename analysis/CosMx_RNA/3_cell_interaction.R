@@ -10,14 +10,14 @@ library(ggrepel)
 #Read object -------------------------------------------------------------------
 seu <-
   readRDS(
-    "~/SPATIAL/Mackensy_analysis/CosMx_RNA/1_Annotation/Objects/seurats_all_norm.RDS"
+    "analysis/CosMx_RNA/Objects/seurats_all_norm.RDS"
   )
 
 #Obtain files for each FOV to perform SCOTIA
 genes <- rownames(seu)
 meta_seu <- as.data.frame(seu@meta.data)
 write_csv(meta_seu,
-          "~/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Files/meta_seu.csv")
+          "analysis/CosMx_RNA/Files/meta_seu.csv")
 
 patients <- unique(seu$patient)
 
@@ -32,7 +32,7 @@ for (patient in patients) {
   cords <- meta[, c("CenterX_global_px", "CenterY_global_px")]
   x_pos <- cords$CenterX_global_px
   y_pos <- cords$CenterY_global_px
-  
+
   #Patient
   df <- data.frame(
     cell_id = cell_id,
@@ -41,19 +41,19 @@ for (patient in patients) {
     x_positions = x_pos,
     y_positions = y_pos
   )
-  
-  
-  
+
+
+
   write_csv(
     df,
     paste0(
-      "~/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Files/",
+      "analysis/CosMx_RNA/Files/",
       patient,
       "_meta_def.csv",
       sep = ""
     )
   )
-  
+
   #Exp
   data_ex <- as.data.frame(seu@assays$RNA$counts)
   data_ex <- as.data.frame(t(data_ex[, cell_id]))
@@ -61,23 +61,23 @@ for (patient in patients) {
   data_ex$cell_id <- rownames(data_ex)
   data_ex$fov <- df$fov
   data_ex <- data_ex[c("cell_id", "fov", genes)]
-  
+
   write_csv(
     data_ex,
     paste0(
-      "~/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Files/",
+      "analysis/CosMx_RNA/Files/",
       patient,
       "_exp_def.csv",
       sep = ""
     )
   )
-  
+
 }
 
 ## LR database -----------------------------------------------------------------
 ## Obtained from this database: https://github.com/ZJUFanLab/CellTalkDB
 lr_pair <-
-  readRDS("~/SPATIAL/Cell_neigh/Neigh_v2/SCOTIA/human_lr_pair.rds")
+  readRDS("data/human_lr_pair.rds")
 lr_pair <-
   lr_pair[lr_pair$ligand_gene_symbol %in% genes &
             lr_pair$receptor_gene_symbol %in% genes,]
@@ -87,11 +87,11 @@ lr_pair <-
 colnames(lr_pair) <- c("l_gene", "r_gene")
 
 write_csv(lr_pair,
-          "~/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Files/lr_pair.csv")
+          "analysis/CosMx_RNA/Files/lr_pair.csv")
 
 ## Run SCOTIA ------------------------------------------------------------------
 system(
-  "taskset -c 0,30 python3 ~/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/scotia_run.py"
+  "taskset -c 0,30 python3 analysis/CosMx_RNA/scotia_run.py"
 )
 
 
@@ -120,7 +120,7 @@ patients <- unique(meta_seu$patient)
 
 for (patient in patients) {
   fovs <- unique(meta_seu[meta_seu$patient == patient, ]$fov)
-  
+
   for (fov in fovs) {
     if (file.exists(
       paste0(
@@ -146,7 +146,7 @@ for (patient in patients) {
           escape_double = FALSE,
           trim_ws = TRUE
         )
-      
+
       ot <-
         read_delim(
           paste0(
@@ -161,7 +161,7 @@ for (patient in patients) {
           escape_double = FALSE,
           trim_ws = TRUE
         )
-      
+
       ot$id_source <-
         mapvalues(
           x = ot$source_cell_idx,
@@ -226,7 +226,7 @@ for (patient in patients) {
             warn_missing = F
           )
         )
-      
+
       ot$fov <-
         as.numeric(
           mapvalues(
@@ -236,22 +236,22 @@ for (patient in patients) {
             warn_missing = F
           )
         )
-      
-      
-      
-      
+
+
+
+
       df <- rbind(df, ot)
     }
-    
-    
+
+
   }
-  
+
 }
 
 #Save
 write_csv(
   df,
-  "/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/4_SCOTIA/Results/all_int.csv"
+  "analysis/CosMx_RNA/Results/all_int.csv"
 )
 
 
