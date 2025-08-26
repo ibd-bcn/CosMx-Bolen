@@ -1,417 +1,272 @@
+# ============================================================================ #
+#   CosMx Analysis - Figure 4 Script
+# ============================================================================ #
+
+# Libraries -------------------------------------------------------------------
 library(Seurat)
+library(dplyr)
 library(ggplot2)
 library(ggrepel)
-library(msigdbr)
-library(clusterProfiler)
-library(org.Hs.eg.db)
+library(tidyr)
 library(plyr)
-library(ggdark)
-library(dplyr)
-options(bitmapType = "cairo")
+library(readr)
+library(circlize)
+library(paletteer)
+library(BiocParallel)
 
-## Data ------------------------------------------------------------------------
-seu <-
-  readRDS(
-    "/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/1_Annotation/Objects/seurats_all_norm.RDS"
-  )
-poly <-
-  read.csv(
-    "/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/0_Curation/Polygons/bolen_colon_RNA.csv"
-  )
-mols <-
-  read.csv(
-    "/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/0_Curation/Molecules/bolen_colon_RNA.csv"
-  )
-meta <-
-  read.csv(
-    "/home/mmoro/SPATIAL/Mackensy_analysis/CosMx_RNA/1_Annotation/Objects/meta.csv"
-  )
+# Read objects ----------------------------------------------------------------
+seurat <- readRDS("analysis/CosMx_RNA/Objects/seurats_all_norm.RDS")
+meta   <- seurat@meta.data
+all_int <- read_csv("analysis/CosMx_RNA/Results/all_int.csv")
 
-## Palette of colours ----------------------------------------------------------
-refined_col <- c(
-  # T cells
-  "MT T cells" = "#5050FFFF",
-  "CD8" = "#CE3D32FF",
-  "Cycling T cells" = "#802268FF",
-  "ILC4" = "#749B58FF",
-  "NK" = "#466983FF",
-  "T cells CCL20" = "#BA6338FF",
-  "Tregs" = "#F0E685FF",
-  "CD4" = "#5DB1DDFF",
-  "MAIT" = "#6BD76BFF",
-  "Ribhi T cells" = "#D595A7FF",
-  "gd IEL" = "#00FFFFFF",
-  "DN" = "#7A65A5FF",
+# Add refined annotations
+all_int$refined_receptor <- mapvalues(all_int$id_receptor, from = meta$cell_id, to = meta$refined)
+all_int$refined_source   <- mapvalues(all_int$id_source,   from = meta$cell_id, to = meta$refined)
+all_int$tissue           <- mapvalues(all_int$id_receptor, from = meta$cell_id, to = meta$tissue)
 
-  # Plasmas
-  "PC IgG" = "#CC9900FF",
-  "Memory B cell" = "#99CC00FF",
-  "Cycling cells" = "#FF1463FF",
-  "PC IgA" = "#0000CCFF",
-  "PC IgA heat shock" = "#3B1B53FF",
-  "PC IER" = "#CCCC99FF",
-  "Naïve B cell" = "#FF0000FF",
-  "B cell" = "#F7B6D2FF",
-  "GC B cell" = "#990080FF",
+# ============================================================================ #
+#   Helper functions
+# ============================================================================ #
 
-  # Epithelium
-  "Secretory progenitor" = "#FFFF00FF",
-  "Epithelium Ribhi" = "#FF7F0EFF",
-  "Cycling TA" = "#C75127FF",
-  "Colonocytes" = "#9EDAE5FF",
-  "Inflammatory colonocyte" = "#9467BDFF",
-  "BEST4 OTOP2" = "#33CC00FF",
-  "Goblet" = "#CC0000FF",
-  "Enteroendocrine" = "#003399FF",
-  "Tuft cells" = "#FFC20AFF",
-  "Paneth-like" = "#FF00CCFF",
+# Chord diagram matrix --------------------------------------------------------
+chordiagram <- function(chord, meta_seu, fov = "all",
+                        subset_source = "all", subset_target = "all",
+                        refined_source = "all", refined_receptor = "all",
+                        freq = 1, down = FALSE) {
+  if ("all" %in% subset_source) subset_source <- unique(meta_seu$subset)
+  if ("all" %in% subset_target) subset_target <- unique(meta_seu$subset)
+  if ("all" %in% refined_source) refined_source <- unique(meta_seu$refined)
+  if ("all" %in% refined_receptor) refined_receptor <- unique(meta_seu$refined)
+  if ("all" %in% fov) fov <- unique(meta_seu$fov)
 
-  # Myeloids
-  "M2" = "#ECFF00",
-  "M1" = "#FFCCCCFF",
-  "M0" = "#924822FF",
-  "DCs" = "#489C97",
-  "Mast" = "#FF5733FF",
-  "Cycling myeloid" = "#2E8B57FF",
-  "IDA macrophage" = "#8A2BE2FF",
-  "Inflammatory monocytes" = "#FF1493FF",
-  "Neutrophil" = "#00FA9AFF",
-  "Eosinophils" = "#FFD700FF",
+  # Select fov
+  pat_cells <- meta_seu[meta_seu$fov %in% fov, ]$cell
 
-  # Stroma
-  "Endothelium" = "#4682B4FF",
-  "Myofibroblasts" = "#7FFF00FF",
-  "Pericytes" = "#00CED1FF",
-  "S3" = "#BDB76BFF",
-  "Fibroblasts" = "#556B2FFF",
-  "Glia" = "#32CD32FF",
-  "Inflammatory fibroblasts" = "#924822FF",
-  "S1" = "#FF5733FF",
-  "FRCs" = "#8A2BE2FF",
+  chord <- chord[chord$id_source %in% pat_cells &
+                   chord$source_cell_type %in% subset_source &
+                   chord$target_cell_type %in% subset_target &
+                   chord$refined_source %in% refined_source &
+                   chord$refined_receptor %in% refined_receptor, ]
 
-  #Other
-  "other" =  "#515151"
-)
+  chord <- as.data.frame(table(chord$refined_source, chord$refined_receptor))
+  chord <- chord[chord$Freq > freq, ]
+  chord_1 <- chord %>% spread(key = Var2, value = Freq)
+  rownames(chord_1) <- chord_1$Var1
+  chord_1 <- chord_1[, -1]
 
-subset_col <- c(
-  "epi" = "#BA6338FF",
-  "stroma" = "#5DB1DDFF",
-  "tcells" = "#802268FF",
-  "plasmas" = "#6BD76BFF",
-  "myeloids" = "#D595A7FF",
+  if (down) return(chord)
+  return(chord_1)
+}
 
-  #Other
-  "other" =  "#4b4b4b"
-)
+# Chord plot ------------------------------------------------------------------
+chord_plot <- function(meta_seu, mat, cell_type, color_chord) {
+  cells <- unique(meta_seu$refined)
+  names(color_chord) <- cells
 
-##Functions --------------------------------------------------------------------
+  col_mat <- matrix("#F0F0F0", nrow = nrow(mat), ncol = ncol(mat),
+                    dimnames = list(rownames(mat), colnames(mat)))
 
-#Volcanos
-volcano <-
-  function(anot = "subset",
-           ct,
-           dif_col = "tissue",
-           seu,
-           id1,
-           id2) {
-    metadata <- seu@meta.data
-    myeloid_metadata <- metadata[metadata[[anot]] == ct,]
-    myeloid_counts_table <- table(myeloid_metadata[[dif_col]])
-    object <-
-      seu[, rownames(seu@meta.data[seu@meta.data[[anot]] == ct, ])]
-    object <- NormalizeData(object)
-    object <- ScaleData(object)
-    object@meta.data[[dif_col]] <-
-      as.factor(object@meta.data[[dif_col]])
-    object <- SetIdent(object, value = object@meta.data[[dif_col]])
-    deg_results <- FindMarkers(object, ident.1 = id1, ident.2 = id2)
-    deg_results <- na.omit(deg_results)
-    deg_results$genes <- rownames(deg_results)
-    deg_results$diffexpressed <- "NO"
-    deg_results$diffexpressed[deg_results$avg_log2FC > log2(1.2) &
-                                deg_results$p_val < 0.05] <- "p.val<0.05 & FC>1.2"
-    deg_results$diffexpressed[deg_results$avg_log2FC < -log2(1.2) &
-                                deg_results$p_val < 0.05] <- "p.val<0.05 & FC<0.83"
-    deg_results$diffexpressed[deg_results$avg_log2FC > log2(1.2) &
-                                deg_results$p_val_adj < 0.05] <- "p.adj<0.05 & FC>1.2"
-    deg_results$diffexpressed[deg_results$avg_log2FC < -log2(1.2) &
-                                deg_results$p_val_adj < 0.05] <- "p.adj<0.05 & FC<0.83"
-    deg_results$delabel <- NA
-    deg_results$delabel[deg_results$diffexpressed != "NO"] <-
-      deg_results$genes[deg_results$diffexpressed != "NO"]
-    deg_results$p_val <-
-      ifelse(deg_results$p_val < 1e-300, 1e-300, deg_results$p_val)
-    p <-
-      ggplot(data = deg_results,
-             aes(
-               x = avg_log2FC,
-               y = -log10(p_val),
-               col = diffexpressed,
-               label = delabel
-             )) +
-      geom_point(size = 3) +
-      theme_bw() +
-      geom_text_repel(size = 8, max.overlaps = 8) +
-      scale_color_manual(
-        values = c(
-          "p.val<0.05 & FC<0.83" = "#5cbde7",
-          "p.adj<0.05 & FC<0.83" = "darkblue",
-          "p.val<0.05 & FC>1.2" = "red",
-          "p.adj<0.05 & FC>1.2" = "darkred"
-        )
-      ) +
-      geom_vline(
-        xintercept = c(-log2(1.2), log2(1.2)),
-        col = "black",
-        linetype = "dashed"
-      ) +
-      geom_hline(
-        yintercept = -log10(0.05),
-        col = "black",
-        linetype = "dashed"
-      ) +
-      labs(color = "Legend") +
-      theme(text = element_text(size = 25)) +
-      guides(color = guide_legend(override.aes = list(size = 5)))
-    return(list(p, deg_results))
+  for (z in rownames(mat)) col_mat[z, ] <- color_chord[z]
+
+  if (!("all" %in% cell_type)) {
+    cols <- setdiff(colnames(col_mat), cell_type)
+    rows <- setdiff(rownames(col_mat), cell_type)
+    col_mat[rows, cols] <- "#F0F0F0"
   }
 
-#Pathway analysis
-pathway_anal <-
-  function(ct,
-           id1,
-           id2,
-           deg_results,
-           cat,
-           max = 10,
-           text_size = 1) {
-    msigdb_hallmark <- msigdbr(species = "Homo sapiens", category = cat)
-    up <-
-      deg_results[deg_results$diffexpressed == "p.val<0.05 & FC>1.2" | deg_results$diffexpressed == "p.adj<0.05 & FC>1.2", ]$genes
-    gene_list_up <- bitr(up,
-                         fromType = "SYMBOL",
-                         toType = "ENTREZID",
-                         OrgDb = org.Hs.eg.db)
-    down <-
-      deg_results[deg_results$diffexpressed == "p.val<0.05 & FC<0.83" | deg_results$diffexpressed == "p.adj<0.05 & FC>1.2", ]$genes
-    gene_list_down <- bitr(down,
-                           fromType = "SYMBOL",
-                           toType = "ENTREZID",
-                           OrgDb = org.Hs.eg.db)
+  chordDiagram(mat,
+               annotationTrack = "grid", preAllocateTracks = 1,
+               grid.col = color_chord, col = col_mat)
 
+  circos.trackPlotRegion(track.index = 1, panel.fun = function(x, y) {
+    xlim  <- get.cell.meta.data("xlim")
+    ylim  <- get.cell.meta.data("ylim")
+    sector <- get.cell.meta.data("sector.index")
+    circos.text(mean(xlim), ylim[1] + .1, sector, facing = "clockwise",
+                niceFacing = TRUE, adj = c(0, 0.5), cex = 0.6)
+    circos.axis(h = "top", labels.cex = 0.5,
+                major.tick.length = 0.2, sector.index = sector, track.index = 2)
+  }, bg.border = NA)
+}
 
-    gene_sets <- msigdb_hallmark %>%
-      dplyr::select(gs_name, entrez_gene)
+#Connection map ----------------------------------------------------------------
+plot_spatial_connections <- function(seurat_obj, fov_id, radius = 139, workers = 35, output_file) {
+   # Extract meta and subset by FOV
+  meta <- seurat_obj@meta.data
+  meta <- meta[meta$fov == fov_id, ]
 
-    up_enrichment_results <-
-      as.data.frame(enricher(gene = gene_list_up$ENTREZID,
-                             TERM2GENE = gene_sets))
+  # Add FERT info
+  fert <- seurat_obj@assays$RNA$counts["FERT", rownames(meta)]
+  meta$fert <- ifelse(fert == 0, "neg", "pos")
 
-    up_enrichment_results <- up_enrichment_results %>%
-      mutate(GeneRatio = as.numeric(sapply(strsplit(GeneRatio, "/"), function(x)
-        as.numeric(x[1]) / as.numeric(x[2]))))
+  # Setup parallel
+  bp <- MulticoreParam(workers = workers, progressbar = TRUE)
+  cells <- meta$cell_id
 
-    down_enrichment_results <-
-      as.data.frame(enricher(gene = gene_list_down$ENTREZID,
-                             TERM2GENE = gene_sets))
+  # Build network
+  network <- BiocParallel::bplapply(cells, BPPARAM = bp, \(c) {
+    x <- meta[c, "CenterX_global_px"]
+    y <- meta[c, "CenterY_global_px"]
+    tt <- sqrt((meta$CenterX_global_px - x)^2 + (meta$CenterY_global_px - y)^2)
+    cn <- rownames(meta)
+    your_dataframe <- data.frame(Column1 = cn, Column2 = as.vector(tt))
+    ordered_df <- your_dataframe[order(your_dataframe$Column2), ]
+    keep <- ordered_df[ordered_df$Column2 < radius, ]
+    return(keep$Column1)
+  })
 
-    down_enrichment_results <- down_enrichment_results %>%
-      mutate(GeneRatio = as.numeric(sapply(strsplit(GeneRatio, "/"), function(x)
-        as.numeric(x[1]) / as.numeric(x[2]))))
+  # Connection matrix
+  lines_df <- BiocParallel::bplapply(1:length(network), BPPARAM = bp, \(c) {
+    conn <- network[[c]]
+    start_cell <- conn[1]
+    connected_cells <- conn[-1]
+    start_coords <- meta %>% filter(cell_id == start_cell)
+    end_coords <- meta %>% filter(cell_id %in% connected_cells)
 
-    up_enrichment_results <-
-      up_enrichment_results[order(up_enrichment_results$qvalue),]
-
-    up_enrichment_results <- head(up_enrichment_results, max)
-
-    down_enrichment_results <-
-      down_enrichment_results[order(down_enrichment_results$qvalue),]
-
-    down_enrichment_results <- head(down_enrichment_results, max)
-
-    up_enrichment_results$s1 <- "Upregulated"
-    down_enrichment_results$s1 <- "Downregulated"
-
-    final_enrichment_result <-
-      rbind(up_enrichment_results, down_enrichment_results)
-
-    final_enrichment_result$log10pval <-
-      -log10(final_enrichment_result$pvalue)
-
-    final_enrichment_result <- final_enrichment_result %>%
-      arrange(GeneRatio)
-
-    format_pathway <- function(pathway) {
-      pathway <- sub("_", ": ", pathway)
-      pathway <- gsub("_", " ", pathway)
-      return(pathway)
+    if (nrow(end_coords) != 0) {
+      df <- data.frame(
+        x_start = start_coords$CenterX_global_px,
+        y_start = start_coords$CenterY_global_px,
+        cell_start = start_coords$refined,
+        x_end = end_coords$CenterX_global_px,
+        y_end = end_coords$CenterY_global_px,
+        cell_end = end_coords$refined,
+        fert_end = end_coords$fert,
+        fert_start = start_coords$fert
+      )
+      return(df)
     }
+  })
 
-    final_enrichment_result$Description <- sapply(final_enrichment_result$Description, format_pathway)
+  big_df <- do.call(rbind, lines_df)
 
-    p <-
-      ggplot(final_enrichment_result,
-             aes(
-               x = s1 ,
-               y = Description,
-               size = GeneRatio,
-               color = s1
-             )) +
-      geom_point() +
-      scale_color_manual(values = c(
-        "Upregulated" = "darkred",
-        "Downregulated" = "darkblue"
-      )) +
-      scale_size_continuous(
-        name = "Gene ratio",
-        range = c(3, 10),
-        guide = guide_legend(override.aes = list(
-          color = "black", fill = "black"
-        ))
-      ) +
-      theme_bw() +
-      labs(
-        title = "",
-        x = "",
-        y = "Pathway description",
-        size = "Gene ratio",
-        color = "Pathway"
-      ) +
-      theme(
-        text = element_text(family = "Helvetica"),
-        plot.title = element_text(face = "bold", size = text_size),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text = element_text(size = text_size),
-        legend.text = element_text(size = text_size),
-        legend.title = element_text(face = "bold", size = text_size)
-      ) + guides(color = guide_legend(override.aes = list(size = 5)))
-    return(p)
-  }
+  # Adjust cell_start for plotting
+  big_df$cell_start <- ifelse(big_df$cell_start == "Colonocytes", "Colonocytes", "Other")
+  big_df <- big_df %>%
+    mutate(cell_start = case_when(
+      cell_start == "Colonocytes" & fert_end == "pos" ~ "Colonocytes+",
+      cell_start == "Colonocytes" & fert_end == "neg" ~ "Colonocytes-",
+      TRUE ~ cell_start
+    ))
 
-## Figure 3A  ------------------------------------------------------------------
+  # Plot
+  p <- ggplot() +
+    geom_point(data = meta, aes(x = CenterX_global_px, y = CenterY_global_px),
+               color = "black", size = 0.01) +
+    geom_segment(data = big_df[big_df$cell_start == "Colonocytes+", ],
+                 aes(x = x_start, y = y_start, xend = x_end, yend = y_end,
+                     color = "blue", linewidth = 0.2, alpha = 1)) +
+    geom_segment(data = big_df[big_df$cell_start == "Colonocytes-", ],
+                 aes(x = x_start, y = y_start, xend = x_end, yend = y_end,
+                     color = "red", linewidth = 0.2, alpha = 1)) +
+    geom_segment(data = big_df[big_df$cell_start == "Other", ],
+                 aes(x = x_start, y = y_start, xend = x_end, yend = y_end,
+                     color = "white", linewidth = 0.05, alpha = 0.8)) +
+    theme_minimal() +
+    theme(
+      panel.background = element_rect(fill = "black", color = NA),
+      plot.background = element_rect(fill = "black", color = NA),
+      strip.background = element_rect(fill = "black"),
+      strip.text = element_blank(),
+      panel.grid = element_line(color = "gray40"),
+      axis.text = element_text(color = "white"),
+      axis.title = element_text(color = "white", face = "bold"),
+      plot.title = element_text(color = "white", face = "bold", hjust = 0.5),
+      legend.position = "right",
+      legend.text = element_text(color = "white")
+    ) +
+    labs(title = paste0("Spatial Connection Map - FOV ", fov_id),
+         x = "X Coordinate", y = "Y Coordinate") +
+    scale_color_identity() +
+    scale_linewidth_identity() +
+    scale_alpha_identity()
 
-df <-
-  volcano(
-    anot = "subset",
-    ct = "epi" ,
-    seu = seu ,
-    id1 = "IBD",
-    id2 = "NHC" ,
-    dif_col = "tissue"
-  )
-df <- df[[2]]
-p <-
-  pathway_anal(
-    ct = "epi",
-    id1 = "IBD" ,
-    id2 = "NHC",
-    deg_results = df,
-    max = 10,
-    cat = "C5",
-    text_size =  20
-  )
-png(
-  filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3B.png",
-  width = 16,
-  height = 12,
-  units = "in",
-  res = 800
+  # Save plot
+  ggsave(filename = output_file, plot = p, width = 8, height = 8, dpi = 300)
+}
+
+# ============================================================================ #
+#   Figure 4
+# ============================================================================ #
+
+## A - Chord plots ------------------------------------------------------------
+color_palette <- c(
+  paletteer_d("ggsci::default_igv"),
+  paletteer_d("ggsci::category20_d3"),
+  paletteer_d("ggsci::default_ucscgb")
 )
-p
-dev.off()
+color_chord <- color_palette[1:52]
 
+conditions <- c("IBD", "PD", "NHC")
 
-## Figure 3B  ------------------------------------------------------------------
-df <-
-  volcano(
-    anot = "subset",
-    ct = "epi" ,
-    seu = seu ,
-    id1 = "PD",
-    id2 = "NHC" ,
-    dif_col = "tissue"
+for (cond in conditions) {
+  mat <- as.matrix(
+    chordiagram(
+      chord = all_int[all_int$tissue == cond, ],
+      meta_seu = meta,
+      fov = "all",
+      subset_source = "all",
+      subset_target = "all",
+      refined_source = c("Colonocytes_FERT+", "Colonocytes_FERT-"),
+      refined_receptor = c("B cell", "CD4", "CD8", "Eosinophils", "Glia",
+                           "Inflammatory monocytes", "NK", "Neutrophil",
+                           "Mast", "PC IgA", "PC IgG", "Myofibroblasts",
+                           "M0", "M1", "M2"),
+      freq = 1
+    )
   )
-df <- df[[2]]
-p <-
-  pathway_anal(
-    ct = "epi",
-    id1 = "PD" ,
-    id2 = "NHC",
-    deg_results = df,
-    max = 10,
-    cat = "C5",
-    text_size =  20
-  )
-png(
-  filename = "~/SPATIAL/Mackensy_analysis/CosMx-Bolen/figures/plots/figure3D.png",
-  width = 22,
-  height = 12,
-  units = "in",
-  res = 800
-)
-p
-dev.off()
 
-## Figure 3C  ------------------------------------------------------------------
-df <-
-  volcano(
-    anot = "refined",
-    ct = "Colonocytes" ,
-    seu = seu ,
-    id1 = "IBD",
-    id2 = "NHC" ,
-    dif_col = "tissue"
+  png(
+    filename = paste0("figures/plots/fig4A_", cond, "_Chord.png"),
+    width = 10, height = 8, units = "in", res = 300
   )
-df <- df[[2]]
-p <-
-  pathway_anal(
-    ct = "Colonocytes",
-    id1 = "IBD" ,
-    id2 = "NHC",
-    deg_results = df,
-    max = 10,
-    cat = "C5",
-    text_size =  20
-  )
-png(
-  filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3F.png",
-  width = 16,
-  height = 12,
-  units = "in",
-  res = 800
-)
-p
-dev.off()
+  chord_plot(meta_seu = meta, mat = mat, cell_type = "all", color_chord = color_chord)
+  dev.off()
+}
 
-## Figure 3D  ------------------------------------------------------------------
+## B - Statistics between interactions ----------------------------------------
+colonocyte_types <- c("Colonocytes_FERT-", "Colonocytes_FERT+")
 
-df <-
-  volcano(
-    anot = "refined",
-    ct = "Colonocytes" ,
-    seu = seu ,
-    id1 = "PD",
-    id2 = "NHC" ,
-    dif_col = "tissue"
-  )
-df <- df[[2]]
-p <-
-  pathway_anal(
-    ct = "Colonocytes",
-    id1 = "PD" ,
-    id2 = "NHC",
-    deg_results = df,
-    max = 10,
-    cat = "C5",
-    text_size =  20
-  )
-png(
-  filename = "~/SPATIAL/Mackensy_analysis/Figures/plots/figure3H.png",
-  width = 18,
-  height = 12,
-  units = "in",
-  res = 800
-)
-p
-dev.off()
+df_filtered <- all_int %>%
+  filter(refined_source %in% colonocyte_types | refined_receptor %in% colonocyte_types)
+
+interaction_counts <- df_filtered %>%
+  mutate(cell_type = case_when(
+    refined_source %in% colonocyte_types ~ refined_source,
+    refined_receptor %in% colonocyte_types ~ refined_receptor
+  )) %>%
+  group_by(tissue, cell_type, ligand_recptor) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  filter(cell_type == "Colonocytes_FERT+" & tissue %in% c("IBD", "NHC", "PD"))
+
+long_df <- interaction_counts %>%
+  pivot_wider(names_from = tissue, values_from = count, values_fill = list(count = 0)) %>%
+  pivot_longer(cols = c("IBD", "PD", "NHC"), names_to = "Condition", values_to = "Value")
+
+custom_colors <- c("IBD" = "#E57373", "NHC" = "#66BB6A", "PD" = "#42A5F5")
+
+pB <- ggplot(long_df, aes(x = Condition, y = Value, fill = Condition)) +
+  geom_boxplot(outlier.shape = NA, color = "black", size = 0.8, width = 0.6) +
+  geom_point(shape = 16, position = position_jitter(0.1), size = 1, alpha = 0.5) +
+  scale_fill_manual(values = custom_colors) +
+  theme_classic() +
+  theme(text = element_text(size = 10),
+        axis.title = element_text(size = 10),
+        axis.text  = element_text(size = 10)) +
+  labs(title = "Number of interactions",
+       y = "Number of interactions", x = "")
+
+ggsave("figures/plots/fig4B_boxplot.png", plot = pB, width = 6, height = 4, dpi = 300)
+
+#C - Spatial Connection maps ---------------------------------------------------
+plot_spatial_connections(seurat_obj = seurat, fov_id = 26, output_file = "figures/plots/fig4C_fov26.png")
+plot_spatial_connections(seurat_obj = seurat, fov_id = 10, output_file = "figures/plots/fig4Ci_fov10.png")
+plot_spatial_connections(seurat_obj = seurat, fov_id = 13, output_file = "figures/plots/fig4Cii_fov13.png")
+#D - Volcano plots -------------------------------------------------------------
+pC <- volcano(anot = "refined", ct = "Colonocytes_FERT+", seu = seurat,
+              id1 = "PD", id2 = "NHC", dif_col = "tissue")[[1]]
+ggsave("figures/plots/fig4C_PDvsNHC.png", plot = pC, width = 6, height = 4, dpi = 300)
+
+pD <- volcano(anot = "refined", ct = "Colonocytes_FERT+", seu = seurat,
+              id1 = "IBD", id2 = "NHC", dif_col = "tissue")[[1]]
+ggsave("figures/plots/fig4D_IBDvsNHC.png", plot = pD, width = 6, height = 4, dpi = 300)
