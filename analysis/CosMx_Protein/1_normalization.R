@@ -19,5 +19,11 @@ cofactor <- 50
 arcsinh_data <- asinh(scaled_data / cofactor)
 
 seu@assays$Prot$data <- arcsinh_data
+seu <- FindVariableFeatures(seu)
+seu <- ScaleData(seu)
+seu <- RunPCA(seu,npcs = 40)
+ElbowPlot(seu,ndims = 40)
+seu <- RunUMAP(seu,dims = 1:25)
 saveRDS(seu,
         "analysis/CosMx_Protein/Objects/norm.RDS")
+

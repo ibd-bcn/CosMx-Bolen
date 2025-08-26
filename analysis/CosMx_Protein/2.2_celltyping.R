@@ -31,7 +31,13 @@ meta_p$subset <-
     no = NA
   )
 
+norm@meta.data$subset <- mapvalues(x = norm@meta.data$cell_id,from = meta_p$cell_id,to = meta_p$subset)
+
 write.csv(
   meta_p,
   "analysis/CosMx_Protein/Results/meta.csv"
 )
+
+saveRDS(norm,
+        "analysis/CosMx_Protein/Objects/seurats_norm_all.RDS")
+
