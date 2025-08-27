@@ -22,6 +22,11 @@ Here’s what you’ll find:
 - **`/data/`**: Where you should store your data.
 - **`/analysis/`**: Code of the analysis of Spatial Omics data.  
 - **`/figures/`**: Code to reproduce all the figures of the paper.  
-- **requeriments.txt**: Python environment to run cell-interaction.
+- **`requirements.txt`**: Python environment to run cell-interaction.
+
+> [!NOTE]  
+If you apply this code, don't forget to mention us! 
+
+
 
 
