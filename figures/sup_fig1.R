@@ -35,7 +35,7 @@ refined_col <- c(
   "Memory B cell"    = "#99CC00FF",
   "Cycling cells"    = "#FF1463FF",
   "PC IgA"           = "#0000CCFF",
-  "PC IgA heat shock"= "#3B1B53FF",
+  "PC IgA heat shock" = "#3B1B53FF",
   "PC IER"           = "#CCCC99FF",
   "Naïve B cell"     = "#FF0000FF",
   "B cell"           = "#F7B6D2FF",
@@ -72,7 +72,7 @@ refined_col <- c(
   "S3"                      = "#BDB76BFF",
   "Fibroblasts"             = "#556B2FFF",
   "Glia"                    = "#32CD32FF",
-  "Inflammatory fibroblasts"= "#924822FF",
+  "Inflammatory fibroblasts" = "#924822FF",
   "S1"                      = "#FF5733FF",
   "FRCs"                    = "#8A2BE2FF"
 )
@@ -81,9 +81,10 @@ refined_col <- c(
 #   Sup Figure 1
 # ============================================================================ #
 
-df <- data.frame(matrix(0, nrow = length(unique(meta[["patient"]])) *
-                          length(unique(meta[["refined"]])),
-                        ncol = 3))
+df <-
+  data.frame(matrix(0, nrow = length(unique(meta[["patient"]])) *
+                      length(unique(meta[["refined"]])),
+                    ncol = 3))
 colnames(df) <- c("patient", "refined", "value")
 
 val1 <- unique(meta[["patient"]])
@@ -96,19 +97,30 @@ df[["patient"]]  <- as.factor(df[["patient"]])
 
 for (x in val1) {
   for (p in val2) {
-    num_of_cells <- nrow(meta[meta[["patient"]] == x & meta[["refined"]] == p, ])
-    df[which(df[["patient"]] == x & df[["refined"]] == p), "value"] <- num_of_cells
+    num_of_cells <-
+      nrow(meta[meta[["patient"]] == x & meta[["refined"]] == p,])
+    df[which(df[["patient"]] == x &
+               df[["refined"]] == p), "value"] <- num_of_cells
   }
 }
-df$patient <- factor(
-  df$patient,
-  levels = paste0("patient", 1:33)  # or use your vector of unique patients
-)
-p <- ggplot(df, aes(fill = .data[["refined"]], y = value, x = .data[["patient"]])) +
-  geom_bar(position = "fill", stat = "identity") +
-  scale_fill_manual(values = refined_col) +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-        text = element_text(size = 10))
+df$patient <- factor(df$patient,
+                     levels = paste0("patient", 1:33)  # or use your vector of unique patients)
+                     p <-
+                       ggplot(df, aes(fill = .data[["refined"]], y = value, x = .data[["patient"]])) +
+                       geom_bar(position = "fill", stat = "identity") +
+                       scale_fill_manual(values = refined_col) +
+                       theme_bw() +
+                       theme(axis.text.x = element_text(
+                         angle = 90,
+                         hjust = 1,
+                         vjust = 0.5
+                       ),
+                       text = element_text(size = 10))
 
-ggsave("figures/plots/supfig1.png", plot = p, width = 8, height = 6, dpi = 300)
+                     ggsave(
+                       "figures/plots/supfig1.png",
+                       plot = p,
+                       width = 8,
+                       height = 6,
+                       dpi = 300
+                     )

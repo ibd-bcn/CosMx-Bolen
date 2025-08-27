@@ -8,15 +8,23 @@ library(dplyr)
 library(plyr)
 
 # Read objects ----------------------------------------------------------------
-seurats_prot <- readRDS("analysis/CosMx_Protein/Objects/seurats_norm_all.RDS")
+seurats_prot <-
+  readRDS("analysis/CosMx_Protein/Objects/seurats_norm_all.RDS")
 meta <- seurats_prot@meta.data
 
 # ============================================================================ #
 #   Palettes
 # ============================================================================ #
 
-proti <- c("NA" = "grey", "Plasma" = "#FF5733FF", "Bcell" = "#FF00CCFF",
-           "Epithelium" = "#33CC00FF", "Tcells" = "#ECFF00", "Fibroblasts" =  "#8A2BE2FF")
+proti <-
+  c(
+    "NA" = "grey",
+    "Plasma" = "#FF5733FF",
+    "Bcell" = "#FF00CCFF",
+    "Epithelium" = "#33CC00FF",
+    "Tcells" = "#ECFF00",
+    "Fibroblasts" =  "#8A2BE2FF"
+  )
 
 # ============================================================================ #
 #   Sup Figure 7
@@ -37,16 +45,29 @@ df[["tissue"]]  <- as.factor(df[["tissue"]])
 
 for (x in val1) {
   for (p in val2) {
-    num_of_cells <- nrow(meta[meta[["tissue"]] == x & meta[["subset"]] == p, ])
-    df[which(df[["tissue"]] == x & df[["subset"]] == p), "value"] <- num_of_cells
+    num_of_cells <-
+      nrow(meta[meta[["tissue"]] == x & meta[["subset"]] == p,])
+    df[which(df[["tissue"]] == x &
+               df[["subset"]] == p), "value"] <- num_of_cells
   }
 }
 
-p1 <- ggplot(df, aes(fill = .data[["subset"]], y = value, x = .data[["tissue"]])) +
+p1 <-
+  ggplot(df, aes(fill = .data[["subset"]], y = value, x = .data[["tissue"]])) +
   geom_bar(position = "fill", stat = "identity") +
   scale_fill_manual(values = proti) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-        text = element_text(size = 10))
+  theme(axis.text.x = element_text(
+    angle = 90,
+    hjust = 1,
+    vjust = 0.5
+  ),
+  text = element_text(size = 10))
 
-ggsave("figures/plots/sup_fig7.png", plot = p1, width = 5, height = 6, dpi = 300)
+ggsave(
+  "figures/plots/sup_fig7.png",
+  plot = p1,
+  width = 5,
+  height = 6,
+  dpi = 300
+)

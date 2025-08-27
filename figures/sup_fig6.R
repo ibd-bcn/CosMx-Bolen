@@ -10,9 +10,13 @@ library(ggdark)
 
 # Read objects ----------------------------------------------------------------
 seurat <- readRDS("analysis/CosMx_RNA/Objects/seurats_all_norm.RDS")
-meta   <- seurat@meta.data
-pols   <- read.csv("analysis/CosMx_RNA/Polygons/pols.csv")
-enrich <- read.csv("analysis/CosMx_RNA/Results/enrichment.csv")
+meta_rna   <- seurat@meta.data
+pols_rna   <- read.csv("analysis/CosMx_RNA/Polygons/pols.csv")
+
+seurats_prot <-
+  readRDS("analysis/CosMx_Protein/Objects/seurats_norm_all.RDS")
+meta_prot <- seurats_prot@meta.data
+pols_prot    <- read.csv("analysis/CosMx_Protein/Polygons/pols.csv")
 
 # ============================================================================ #
 #   Helper functions
@@ -29,11 +33,11 @@ plot_pol <- function(object,
                      mols_c = FALSE,
                      genes = FALSE) {
   if (fov != "all") {
-    object <- object[object$fov == fov,]
+    object <- object[object$fov == fov, ]
   }
 
   cells <- object$cell
-  poly  <- poly[poly$cell %in% cells,]
+  poly  <- poly[poly$cell %in% cells, ]
   poly[[annotation]] <- mapvalues(x = poly$cell,
                                   from = object$cell,
                                   to   = object[[annotation]])
@@ -43,8 +47,8 @@ plot_pol <- function(object,
                  color = 'black')
 
   if (mols_c) {
-    mols <- mols[mols$cell %in% cells,]
-    mols <- mols[mols$target %in% genes,]
+    mols <- mols[mols$cell %in% cells, ]
+    mols <- mols[mols$target %in% genes, ]
     p <- p + geom_point(
       data = mols,
       aes(x = x_global_px, y = y_global_px, color = target),
@@ -67,6 +71,54 @@ plot_pol <- function(object,
 
   return(p)
 }
+
+plot_spatial_dis_gene <-
+  function(object,
+           meta ,
+           sample,
+           fov,
+           gene,
+           pol_path,
+           cell_name_col = "cell_names",
+           mult = FALSE) {
+    meta[[gene]] <- as.vector(object[gene,])
+    #Modify Data
+    if (sample == FALSE) {
+      meta <- meta[meta$fov %in% fov,]
+
+
+
+      poly <- pol_path
+
+    }
+
+    cells <- meta[[cell_name_col]]
+    poly <- poly[poly[[cell_name_col]] %in% cells, ]
+    poly[[gene]] <- as.numeric(mapvalues(x = poly[[cell_name_col]],
+                                         from = meta[[cell_name_col]],
+                                         to = meta[[gene]]))
+    poly[[gene]] <- log(poly[[gene]] + 0.1)
+
+    #Plot
+    p <- ggplot(poly, aes(x = x_local_px, y = y_local_px)) +
+      geom_polygon(aes(group = .data[[cell_name_col]], fill = .data[[gene]]),
+                   color = 'black') +
+      dark_theme_gray(base_family = "Fira Sans Condensed Light", base_size = 20) +  scale_fill_gradient(low = "white", high = "darkred") +
+      facet_wrap(~ fov) +
+      theme(
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.background = element_blank(),
+        legend.position = "right"
+      ) +
+      labs(x = "x",
+           y = "y")
+
+    return(p)
+  }
 
 # ============================================================================ #
 #   Palette
@@ -134,175 +186,84 @@ refined_col <- c(
   "FRCs"                    = "#8A2BE2FF"
 )
 
+
+proti <-
+  c(
+    "NA" = "grey",
+    "Plasma" = "#FF5733FF",
+    "Bcell" = "#FF00CCFF",
+    "Epithelium" = "#33CC00FF",
+    "Tcells" = "#ECFF00",
+    "Fibroblasts" =  "#8A2BE2FF"
+  )
+
 # ============================================================================ #
 #   Figure 1
 # ============================================================================ #
 
-## A - UMAP -------------------------------------------------------------------
-p <- DimPlot(seurat, group.by = "refined", cols = refined_col)
-ggsave(
-  "figures/plots/fig1A.png",
-  plot = p,
-  width = 10,
-  height = 10,
-  dpi = 300
-)
-
-## B - Composition by subset --------------------------------------------------
-df <- data.frame(matrix(0, nrow = length(unique(meta[["subset"]])) *
-                          length(unique(meta[["refined"]])),
-                        ncol = 3))
-colnames(df) <- c("subset", "refined", "value")
-
-val1 <- unique(meta[["subset"]])
-val2 <- unique(meta[["refined"]])
-
-df[["subset"]]  <- rep(val1, each  = length(val2))
-df[["refined"]] <- rep(val2, times = length(val1))
-df[["refined"]] <- as.factor(df[["refined"]])
-df[["subset"]]  <- as.factor(df[["subset"]])
-
-for (x in val1) {
-  for (p in val2) {
-    num_of_cells <-
-      nrow(meta[meta[["subset"]] == x & meta[["refined"]] == p,])
-    df[which(df[["subset"]] == x &
-               df[["refined"]] == p), "value"] <- num_of_cells
-  }
-}
-
-p1 <-
-  ggplot(df, aes(fill = .data[["refined"]], y = value, x = .data[["subset"]])) +
-  geom_bar(position = "fill", stat = "identity") +
-  scale_fill_manual(values = refined_col) +
-  theme_bw() +
-  theme(axis.text.x = element_text(
-    angle = 90,
-    hjust = 1,
-    vjust = 0.5
-  ),
-  text = element_text(size = 10))
-
-ggsave(
-  "figures/plots/fig1B.png",
-  plot = p1,
-  width = 6,
-  height = 6,
-  dpi = 300
-)
-
-## C - Polygons ---------------------------------------------------------------
-p3 <-
+## C - RNA ---------------------------------------------------------------------
+pC1 <-
   plot_pol(
-    meta,
+    meta_rna,
     fov = 10,
-    poly = pols,
-    annotation = "refined",
+    poly = pols_rna,
+    annotation = "subset",
     pal = refined_col
   )
 ggsave(
-  "figures/plots/fig1C_fov10.png",
-  plot = p3,
+  "figures/plots/sup_fig6c_sub.png",
+  plot = pC1,
   width = 10,
   height = 6,
   dpi = 300
 )
 
-p4 <-
+pC2 <-
   plot_pol(
-    meta,
-    fov = 12,
-    poly = pols,
+    meta_rna,
+    fov = 10,
+    poly = pols_rna,
     annotation = "refined",
     pal = refined_col
   )
 ggsave(
-  "figures/plots/fig1C_fov12.png",
-  plot = p4,
+  "figures/plots/sup_fig6c_ref.png",
+  plot = pC2,
   width = 10,
   height = 6,
   dpi = 300
 )
 
-p5 <-
+## D - PROT---------------------------------------------------------------------
+pD1 <-
   plot_pol(
-    meta,
-    fov = 30,
-    poly = pols,
-    annotation = "refined",
-    pal = refined_col
+    meta_prot,
+    fov = 10,
+    poly = pols_prot,
+    annotation = "subset",
+    pal = proti
   )
 ggsave(
-  "figures/plots/fig1C_fov30.png",
-  plot = p5,
+  "figures/plots/sup_fig6d_sub.png",
+  plot = pD1,
   width = 10,
   height = 6,
   dpi = 300
 )
 
-## D - Composition by tissue --------------------------------------------------
-df <- data.frame(matrix(0, nrow = length(unique(meta[["tissue"]])) *
-                          length(unique(meta[["refined"]])),
-                        ncol = 3))
-colnames(df) <- c("tissue", "refined", "value")
-
-val1 <- unique(meta[["tissue"]])
-val2 <- unique(meta[["refined"]])
-
-df[["tissue"]]  <- rep(val1, each  = length(val2))
-df[["refined"]] <- rep(val2, times = length(val1))
-df[["refined"]] <- as.factor(df[["refined"]])
-df[["tissue"]]  <- as.factor(df[["tissue"]])
-
-for (x in val1) {
-  for (p in val2) {
-    num_of_cells <-
-      nrow(meta[meta[["tissue"]] == x & meta[["refined"]] == p,])
-    df[which(df[["tissue"]] == x &
-               df[["refined"]] == p), "value"] <- num_of_cells
-  }
-}
-
-p6 <-
-  ggplot(df, aes(fill = .data[["refined"]], y = value, x = .data[["tissue"]])) +
-  geom_bar(position = "fill", stat = "identity") +
-  scale_fill_manual(values = refined_col) +
-  theme_bw() +
-  theme(axis.text.x = element_text(
-    angle = 90,
-    hjust = 1,
-    vjust = 0.5
-  ),
-  text = element_text(size = 10))
-
-ggsave(
-  "figures/plots/fig1D.png",
-  plot = p6,
-  width = 6,
-  height = 6,
-  dpi = 300
+pD2 <- plot_spatial_dis_gene(
+  object = seurats_prot ,
+  fov = 10,
+  sample = FALSE,
+  gene = "4-1BB",
+  pol_path = pols_prot,
+  cell_name_col = "cell",
+  meta = meta_prot
 )
-
-## E - Enrichment heatmap -----------------------------------------------------
-p7 <- ggplot(enrich, aes(Comparison, Cluster, fill = e.score)) +
-  geom_raster() +
-  geom_text(aes(label = ast_Chisq)) +
-  scale_fill_gradient2(
-    low = 'blue',
-    mid = 'white',
-    high = 'red',
-    limits = c(min(df_final$e.score), max(df_final$e.score)),
-    midpoint = 0
-  ) +
-  theme_bw() +
-  theme(panel.border = element_blank(),
-        panel.grid.major = element_blank()) +
-  labs(fill = 'Enrichment\nscore\nvs\nNHC')
-
 ggsave(
-  "figures/plots/fig1E.png",
-  plot = p7,
-  width = 6,
+  "figures/plots/sup_fig6d_exp.png",
+  plot = pD2,
+  width = 10,
   height = 6,
   dpi = 300
 )
