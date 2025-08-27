@@ -60,6 +60,7 @@ sampled_cells <- cell_data %>%
   pull(cell_names)
 
 todas_cut <- todas_cut[, sampled_cells]
+saveRDS(todas_cut, "analysis/CosMx_Protein/Objects/sc_ref_cut.RDS")
 DimPlot(todas_cut, group.by = "anot_maxfuse", label = TRUE)
 
 #Save CSV files Maxfuse --------------------------------------------------------
