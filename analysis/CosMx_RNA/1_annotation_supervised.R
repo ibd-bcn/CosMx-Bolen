@@ -130,7 +130,7 @@ saveRDS(epi,"analysis/CosMx_RNA/Objects/epi.RDS")
 #FlightPlot
 cols_epi <- cols[seq_along(unique(sup$clust))]
 names(cols_epi) <- unique(sup$clust)
-fp <- flightpath_plot_black(flightpath_result = NULL, insitutype_result = sup, col = cols_epi[sup$clust])
+fp <- flightpath_plot(flightpath_result = NULL, insitutype_result = sup, col = cols_epi[sup$clust])
 png(
   "analysis/CosMx_RNA/Markers/epi.png",
   width = 15,
@@ -182,7 +182,7 @@ saveRDS(myeloids,"analysis/CosMx_RNA/Objects/myeloids.RDS")
 #Flight plot
 cols_my <- cols[seq_along(unique(sup$clust))]
 names(cols_my) <- unique(sup$clust)
-fp <- flightpath_plot_black(flightpath_result = NULL, insitutype_result = sup, col = cols_my[sup$clust])
+fp <- flightpath_plot(flightpath_result = NULL, insitutype_result = sup, col = cols_my[sup$clust])
 png(
   "analysis/CosMx_RNA/Markers/myeloids.png",
   width = 15,
@@ -235,7 +235,7 @@ saveRDS(tcells,"analysis/CosMx_RNA/Objects/tcells.RDS")
 #Flightpath Plot
 cols_tc <- cols[seq_along(unique(sup$clust))]
 names(cols_tc) <- unique(sup$clust)
-fp <- flightpath_plot_black(flightpath_result = NULL, insitutype_result = sup, col = cols_tc[sup$clust])
+fp <- flightpath_plot(flightpath_result = NULL, insitutype_result = sup, col = cols_tc[sup$clust])
 png(
   "analysis/CosMx_RNA/Markers/tcells.png",
   width = 15,
@@ -289,7 +289,7 @@ saveRDS(plasmas,"analysis/CosMx_RNA/Objects/plasmas.RDS")
 #Flight plot
 cols_pl <- cols[seq_along(unique(sup$clust))]
 names(cols_pl) <- unique(sup$clust)
-fp <- flightpath_plot_black(flightpath_result = NULL, insitutype_result = sup, col = cols_pl[sup$clust])
+fp <- flightpath_plot(flightpath_result = NULL, insitutype_result = sup, col = cols_pl[sup$clust])
 png(
   "analysis/CosMx_RNA/Markers/plasmas.png",
   width = 15,
@@ -345,7 +345,7 @@ saveRDS(stroma,"analysis/CosMx_RNA/Objects/stroma.RDS")
 #Flightpath Plot
 cols_st <- cols[seq_along(unique(sup$clust))]
 names(cols_st) <- unique(sup$clust)
-fp <- flightpath_plot_black(flightpath_result = NULL, insitutype_result = sup, col = cols_st[sup$clust])
+fp <- flightpath_plot(flightpath_result = NULL, insitutype_result = sup, col = cols_st[sup$clust])
 png(
   "analysis/CosMx_RNA/Markers/stroma.png",
   width = 15,
