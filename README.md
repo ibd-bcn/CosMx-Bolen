@@ -24,6 +24,8 @@ Environment dependencies are provided in:
 - `requirements_python.txt`  
 - `requirements_r.txt`
 
+![](image.png)
+
 ---
 
 ## File Overview
