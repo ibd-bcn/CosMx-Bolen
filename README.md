@@ -138,7 +138,6 @@ Image exports are stored within:
     ├── figure4.R
     ├── figure6.R
     ├── plots/
-    │   └── sup_fig7.png
     ├── sup_fig1.R
     ├── sup_fig3.R
     ├── sup_fig4.R
