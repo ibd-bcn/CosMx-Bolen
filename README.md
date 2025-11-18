@@ -173,3 +173,10 @@ Both CosMx RNA and Protein pipelines follow a standardized workflow:
 This research was funded in whole or in part by Aligning Science Across Parkinson’s (ASAP Grant #) through the Michael J. Fox Foundation for Parkinson’s Research (MJFF).
 
 ---
+
+### License
+**MIT LICENSE**.
+
+### Citation
+If using data or code from this folder, cite:  
+**Bolen et al., 2025. Spatial single-cell multiomics reveals peripheral immune dysfunction in Parkinson’s and inflammatory bowel disease.**
