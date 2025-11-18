@@ -352,37 +352,39 @@ display: none;
 </div>
 
 
-<div id="cosmx-rna-analysis-readme" class="section level1">
-<h1>CosMx RNA Analysis – README</h1>
+<div id="cosmx-protein-analysis-readme" class="section level1">
+<h1>CosMx Protein Analysis – README</h1>
 <div id="general-information" class="section level2">
 <h2>General Information</h2>
 <p>Generated on <strong>18 November 2025</strong><br />
 Last modified on <strong>18 November 2025</strong></p>
 <p>This directory contains all scripts, intermediate data structures,
-and outputs associated with the <strong>CosMx RNA</strong> workflow used
-in the study <em>Spatial single-cell multiomics reveals peripheral
+and outputs associated with the <strong>CosMx Protein</strong> workflow
+used in the study <em>Spatial single-cell multiomics reveals peripheral
 immune dysfunction in Parkinson’s and inflammatory bowel
 disease</em>.</p>
-<p>CosMx RNA data were acquired in <strong>2023</strong> using
-NanoString CosMx™ Spatial Molecular Imaging.</p>
+<p>CosMx Protein data were acquired in <strong>2023–2024</strong> using
+NanoString CosMx™ Spatial Molecular Imaging with the <strong>68-plex
+protein panel</strong>.</p>
 <hr />
 </div>
 <div id="file-overview" class="section level2">
 <h2>File Overview</h2>
-<p>This directory contains the full CosMx RNA analysis workflow.<br />
+<p>This directory contains the full CosMx Protein analysis
+workflow.<br />
 Scripts follow a numerical prefix corresponding to the order of
 processing.</p>
 <pre><code>0_curation.R
-1_annotation_supervised.R
-2.normalization.R
+1_normalization.R
+2.0_celltyping.R
+2.1_celltyping.py
+2.2_celltyping.R
 3_cell_interaction.R
-abundance_enrichment.R
+abundances_enrichment.R
 scotia_cell_int.py
-Files/
-Markers/
-Molecules/
 Objects/
 Polygons/
+Files/
 Results/
 README.md</code></pre>
 <hr />
@@ -392,19 +394,20 @@ README.md</code></pre>
 <ul>
 <li><code>0_*</code> → data loading, QC, object creation<br />
 </li>
-<li><code>1_*</code> → supervised annotation<br />
+<li><code>1_*</code> → normalization<br />
 </li>
-<li><code>2_*</code> → normalization and integration<br />
+<li><code>2_*</code> → cross-modal cell type annotation (RNA →
+Protein)<br />
 </li>
-<li><code>3_*</code> → cell–cell interaction<br />
+<li><code>3_*</code> → spatial cell–cell interaction<br />
 </li>
-<li><code>abundance_enrichment.R</code> → abundance and enrichment
+<li><code>abundances_enrichment.R</code> → abundance and enrichment
 summaries</li>
 </ul>
 <div id="file-formats" class="section level3">
 <h3>File Formats</h3>
 <ul>
-<li><code>.csv</code> → metadata, molecule tables, marker lists<br />
+<li><code>.csv</code> → metadata, correspondence lists, counts<br />
 </li>
 <li><code>.RDS</code> → Seurat objects<br />
 </li>
@@ -419,44 +422,61 @@ summaries</li>
 <h2>Data-Specific Information</h2>
 <div id="raw-data-data" class="section level3">
 <h3>Raw Data (<code>/data/</code>)</h3>
-<p>CosMx-exported RNA tables per FOV:</p>
+<p>CosMx-exported protein tables per FOV:</p>
 <ul>
-<li><code>exprMat.csv</code> – gene-by-cell expression matrix<br />
+<li><code>exprMat_file.csv</code> – protein intensity matrix<br />
 </li>
-<li><code>metadata.csv</code> – cell-level metadata<br />
+<li><code>metadata_file.csv</code> – segmentation metadata<br />
 </li>
-<li><code>tx_file.csv</code> – transcript-level molecule table</li>
+<li><code>polygons.csv</code> – cell boundaries</li>
 </ul>
 <p>Important metadata columns:</p>
 <ul>
-<li><code>cell_ID</code><br />
+<li><code>cell</code><br />
 </li>
-<li><code>target_name</code><br />
+<li><code>fov</code><br />
+</li>
+<li><code>Area</code><br />
 </li>
 <li><code>x_global_px</code>, <code>y_global_px</code><br />
 </li>
-<li><code>Area</code></li>
+<li><code>tissue</code>, <code>patient</code></li>
 </ul>
-<p>Missing values are encoded as <code>NA</code>.</p>
+<p>Negative probes:</p>
+<ul>
+<li><code>Rb IgG</code><br />
+</li>
+<li><code>Ms IgG1</code></li>
+</ul>
 <hr />
 </div>
 </div>
-<div id="directory-molecules" class="section level2">
-<h2>Directory: <code>Molecules/</code></h2>
-<p>Contains molecule-level raw input exported from CosMx.</p>
-<p>Columns:</p>
+<div id="directory-objects" class="section level2">
+<h2>Directory: <code>Objects/</code></h2>
+<p>Contains all Seurat objects:</p>
 <ul>
-<li><code>TargetName</code> – gene name<br />
+<li><code>seurats.RDS</code><br />
 </li>
-<li><code>QScore</code> – detection confidence<br />
+<li><code>qc_seurats.RDS</code><br />
 </li>
-<li><code>x_local</code>, <code>y_local</code> – cell-local
-coordinates<br />
+<li><code>qc_seurats_filt.RDS</code><br />
 </li>
-<li><code>x_global</code>, <code>y_global</code> – global
-coordinates<br />
+<li><code>norm.RDS</code><br />
 </li>
-<li><code>CellID</code> – segmentation assignment</li>
+<li><code>sc_ref_cut.RDS</code><br />
+</li>
+<li><code>counts.RDS</code><br />
+</li>
+<li><code>meta.csv</code><br />
+</li>
+<li><code>counts_SC_cut.csv</code>, <code>meta_SC_cut.csv</code>
+(MaxFuse inputs)</li>
+</ul>
+<p>Assays included:</p>
+<ul>
+<li><strong>Prot</strong> – protein counts<br />
+</li>
+<li><strong>Negprob</strong> – negative control probe intensities</li>
 </ul>
 <hr />
 </div>
@@ -468,41 +488,13 @@ coordinates<br />
 </li>
 <li>Polygon vertex coordinates<br />
 </li>
-<li>Cell boundaries for visualization and spatial analysis</li>
+<li>Cell boundaries for visualization and spatial network analysis</li>
 </ul>
 <hr />
 </div>
-<div id="directory-objects" class="section level2">
-<h2>Directory: <code>Objects/</code></h2>
-<p>Contains all Seurat objects:</p>
-<ul>
-<li><code>qc_seurat.RDS</code> – unfiltered object<br />
-</li>
-<li><code>qc_seurat_pass.RDS</code> – QC-filtered object<br />
-</li>
-<li><code>annotated_seurat.RDS</code> – object with supervised
-annotation<br />
-</li>
-<li><code>normalized_seurat.RDS</code> – final normalized object</li>
-</ul>
-<p>Assays included:</p>
-<ul>
-<li><strong>RNA</strong> – gene expression<br />
-</li>
-<li><strong>NegProbe</strong> – negative probe counts<br />
-</li>
-<li><strong>SystemControl</strong> – system control probes</li>
-</ul>
-<hr />
-</div>
-<div id="directory-markers" class="section level2">
-<h2>Directory: <code>Markers/</code></h2>
-<p>Contains marker gene lists and marker-based QC plots:</p>
-<ul>
-<li><code>markers_global.csv</code><br />
-</li>
-<li><code>*_markers.png</code></li>
-</ul>
+<div id="directory-files" class="section level2">
+<h2>Directory: <code>Files/</code></h2>
+<p>Intermediate files not used for downstream analysis.</p>
 <hr />
 </div>
 <div id="directory-results" class="section level2">
@@ -513,7 +505,7 @@ annotation<br />
 </li>
 <li>Cell type annotation tables<br />
 </li>
-<li>Abundance and enrichment matrices<br />
+<li>Abundance and enrichment tables<br />
 </li>
 <li>Cell–cell interaction results<br />
 </li>
@@ -521,83 +513,126 @@ annotation<br />
 </ul>
 <hr />
 </div>
-<div id="directory-files" class="section level2">
-<h2>Directory: <code>Files/</code></h2>
-<p>Intermediate files not used for downstream analysis.</p>
-<hr />
-</div>
 <div id="workflow" class="section level2">
 <h2>Workflow</h2>
 <div id="step-0-curation-qc-0_curation.r" class="section level3">
 <h3>Step 0 – Curation &amp; QC (<code>0_curation.R</code>)</h3>
 <ul>
-<li><p>Load raw RNA tables<br />
+<li><p>Load raw protein tables<br />
 </p></li>
-<li><p>Build Seurat object (<code>RNA</code>, <code>NegProbe</code>,
-<code>SystemControl</code> assays)<br />
+<li><p>Build Seurat object (<code>Prot</code> + <code>Negprob</code>
+assays)<br />
 </p></li>
-<li><p>Append metadata (cell ID, FOV)<br />
+<li><p>Append metadata (patient, tissue, FOV)<br />
 </p></li>
-<li><p>Apply QC filters:</p>
-<p><strong>QC Flag 1 – Low counts</strong><br />
-<strong>QC Flag 2 – High negative probe proportion</strong><br />
-<strong>QC Flag 3 – Low gene complexity</strong><br />
-<strong>QC Flag 4 – Polygon area outliers (Grubbs test)</strong><br />
-<strong>QC Flag 5 – Target-level QC</strong></p></li>
-</ul>
-<p>Outputs saved to <code>/Objects/</code>.</p>
-<hr />
-</div>
-<div id="step-1-supervised-annotation-1_annotation_supervised.r" class="section level3">
-<h3>Step 1 – Supervised Annotation
-(<code>1_annotation_supervised.R</code>)</h3>
+<li><p>Export polygons<br />
+</p></li>
+<li><p>Generate QC flags:</p>
+<p><strong>QC Flag 1 – Protein count distribution</strong></p>
 <ul>
-<li>Load scRNA-seq reference<br />
+<li>low threshold = 50th percentile<br />
 </li>
-<li>Select marker genes<br />
-</li>
-<li>Run InSituType supervised classification<br />
-</li>
-<li>Export annotated objects and probability tables</li>
+<li>high threshold = 90th percentile</li>
 </ul>
-<hr />
-</div>
-<div id="step-2-normalization-2.normalization.r" class="section level3">
-<h3>Step 2 – Normalization (<code>2.normalization.R</code>)</h3>
+<p><strong>QC Flag 2 – Negative probes</strong></p>
 <ul>
-<li>Apply SCTransform or log-normalization<br />
+<li>mean negative ∈ [2, 15]</li>
+</ul>
+<p><strong>QC Flag 3 – Polygon area</strong></p>
+<ul>
+<li>iterative Grubbs outlier removal</li>
+</ul></li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li><code>qc_seurats.RDS</code><br />
 </li>
-<li>Perform scaling and PCA<br />
+<li><code>qc_seurats_filt.RDS</code><br />
 </li>
-<li>Optional Harmony integration<br />
-</li>
-<li>Export normalized objects to <code>/Results/</code></li>
+<li><code>counts.RDS</code>, <code>meta.csv</code></li>
 </ul>
 <hr />
 </div>
-<div id="step-3-cellcell-interaction" class="section level3">
-<h3>Step 3 – Cell–Cell Interaction</h3>
+<div id="step-1-normalization-1_normalization.r" class="section level3">
+<h3>Step 1 – Normalization (<code>1_normalization.R</code>)</h3>
+<p>Procedure:</p>
+<ol style="list-style-type: decimal">
+<li>Total intensity normalization<br />
+</li>
+<li>Arcsinh transform (cofactor = 50)<br />
+</li>
+<li>Variable feature selection<br />
+</li>
+<li>Scaling<br />
+</li>
+<li>PCA (40 PCs)<br />
+</li>
+<li>UMAP (PCs 1–25)</li>
+</ol>
+<p>Output: <code>norm.RDS</code></p>
+<hr />
+</div>
+<div id="step-2-cell-typing" class="section level3">
+<h3>Step 2 – Cell Typing</h3>
+<div id="step-2.0-reference-setup-2.0_celltyping.r" class="section level4">
+<h4>Step 2.0 – Reference Setup (<code>2.0_celltyping.R</code>)</h4>
+<ul>
+<li>Load Trigos scRNA-seq reference<br />
+</li>
+<li>Filter relevant compartments<br />
+</li>
+<li>Downsample to 2,000 cells per label<br />
+</li>
+<li>Build protein-to-gene correspondence table<br />
+</li>
+<li>Export matrices for MaxFuse</li>
+</ul>
+</div>
+<div id="step-2.1-maxfuse-2.1_celltyping.py" class="section level4">
+<h4>Step 2.1 – MaxFuse (<code>2.1_celltyping.py</code>)</h4>
+<ul>
+<li>Perform RNA ↔︎ Protein cross-modal mapping<br />
+</li>
+<li>Generate label transfer file</li>
+</ul>
+</div>
+<div id="step-2.2-annotation-cleanup-2.2_celltyping.r" class="section level4">
+<h4>Step 2.2 – Annotation Cleanup (<code>2.2_celltyping.R</code>)</h4>
+<ul>
+<li>Import MaxFuse predictions<br />
+</li>
+<li>Apply final annotation<br />
+</li>
+<li>Save updated object</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="step-3-cellcell-interactions" class="section level3">
+<h3>Step 3 – Cell–Cell Interactions</h3>
 <p>Files:</p>
 <ul>
 <li><code>3_cell_interaction.R</code><br />
 </li>
 <li><code>scotia_cell_int.py</code></li>
 </ul>
-<p>Steps:</p>
+<p>Workflow:</p>
 <ol style="list-style-type: decimal">
-<li>Export coordinates and cell types<br />
+<li>Export cell coordinates + cell types<br />
 </li>
-<li>Run Python-based scotia interaction analysis<br />
+<li>Run <strong>scotia</strong> (Python)<br />
 </li>
-<li>Import results into R for summarization and visualization<br />
+<li>Import edge list and interaction scores<br />
+</li>
+<li>Summaries by tissue, patient, and condition<br />
 </li>
 <li>Save outputs to <code>/Results/</code></li>
 </ol>
 <hr />
 </div>
-<div id="step-4-abundance-enrichment-abundance_enrichment.r" class="section level3">
+<div id="step-4-abundance-enrichment-abundances_enrichment.r" class="section level3">
 <h3>Step 4 – Abundance &amp; Enrichment
-(<code>abundance_enrichment.R</code>)</h3>
+(<code>abundances_enrichment.R</code>)</h3>
 <p>Computes:</p>
 <ul>
 <li>Cell type abundance per tissue and patient<br />
@@ -606,12 +641,13 @@ annotation<br />
 </li>
 <li>Condition-specific differences</li>
 </ul>
-<p>Outputs stored in <code>/Results/</code>.</p>
+<p>All saved under <code>/Results/</code>.</p>
 <hr />
 </div>
 </div>
 <div id="citation" class="section level2">
 <h2>Citation</h2>
+<p>If using this dataset or code, please cite:</p>
 <p>Bolen et al., 2025.<br />
 <em>Spatial single-cell multiomics reveals peripheral immune dysfunction
 in Parkinson’s and inflammatory bowel disease.</em></p>

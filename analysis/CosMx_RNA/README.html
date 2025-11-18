@@ -362,29 +362,16 @@ Last modified on <strong>18 November 2025</strong></p>
 and outputs associated with the <strong>CosMx RNA</strong> workflow used
 in the study <em>Spatial single-cell multiomics reveals peripheral
 immune dysfunction in Parkinson’s and inflammatory bowel
-disease</em>.<br />
-CosMx RNA data were acquired in <strong>2023</strong> using NanoString
-CosMx™ Spatial Molecular Imaging.</p>
-<p>The workflow was executed using:</p>
-<ul>
-<li>R version 4.3 or higher</li>
-<li>Seurat version 5</li>
-<li>InSituType</li>
-<li>Harmony</li>
-<li>ggplot2</li>
-<li>Python version 3.8 or higher (for cell–cell interaction)</li>
-</ul>
-<p>Environment dependencies are provided at the repository root.</p>
+disease</em>.</p>
+<p>CosMx RNA data were acquired in <strong>2023</strong> using
+NanoString CosMx™ Spatial Molecular Imaging.</p>
 <hr />
 </div>
 <div id="file-overview" class="section level2">
 <h2>File Overview</h2>
-<p>This directory contains the complete CosMx RNA analysis
-workflow.<br />
-Scripts follow a numerical prefix that corresponds to the processing
-order.</p>
-<div id="files-and-subdirectories" class="section level3">
-<h3>Files and Subdirectories</h3>
+<p>This directory contains the full CosMx RNA analysis workflow.<br />
+Scripts follow a numerical prefix corresponding to the order of
+processing.</p>
 <pre><code>0_curation.R
 1_annotation_supervised.R
 2.normalization.R
@@ -400,79 +387,64 @@ Results/
 README.md</code></pre>
 <hr />
 </div>
-<div id="file-naming-conventions" class="section level3">
-<h3>File Naming Conventions</h3>
+<div id="file-naming-conventions" class="section level2">
+<h2>File Naming Conventions</h2>
 <ul>
-<li><code>0_*</code> → Data loading, object construction, quality
-control<br />
+<li><code>0_*</code> → data loading, QC, object creation<br />
 </li>
-<li><code>1_*</code> → Supervised annotation<br />
+<li><code>1_*</code> → supervised annotation<br />
 </li>
-<li><code>2_*</code> → Normalization and downstream integration<br />
+<li><code>2_*</code> → normalization and integration<br />
 </li>
-<li><code>3_*</code> → Cell–cell interaction<br />
+<li><code>3_*</code> → cell–cell interaction<br />
 </li>
-<li>Additional scripts → enrichment, abundance calculations,
-utilities</li>
+<li><code>abundance_enrichment.R</code> → abundance and enrichment
+summaries</li>
 </ul>
-</div>
-<div id="file-formats-included" class="section level3">
-<h3>File Formats Included</h3>
+<div id="file-formats" class="section level3">
+<h3>File Formats</h3>
 <ul>
-<li>CSV files (metadata, marker lists)</li>
-<li>RDS files (Seurat objects)</li>
-<li>TXT files (gene lists)</li>
-<li>PNG and PDF files (QC plots, marker visualizations)</li>
-<li>PY scripts (Python-based interaction analysis)</li>
-</ul>
-</div>
-<div id="relationship-between-files" class="section level3">
-<h3>Relationship Between Files</h3>
-<ul>
-<li><code>0_curation.R</code> creates the initial Seurat objects in
-<code>Objects/</code></li>
-<li><code>1_annotation_supervised.R</code> loads curated objects and
-applies supervised annotation</li>
-<li><code>2.normalization.R</code> performs normalization and saves
-results in <code>Results/</code></li>
-<li><code>3_cell_interaction.R</code> and
-<code>scotia_cell_int.py</code> compute cell–cell interactions</li>
-<li>Intermediate QC files, polygons, molecules, and metadata are stored
-in their respective subdirectories</li>
+<li><code>.csv</code> → metadata, molecule tables, marker lists<br />
+</li>
+<li><code>.RDS</code> → Seurat objects<br />
+</li>
+<li><code>.png</code>, <code>.pdf</code> → visualizations<br />
+</li>
+<li><code>.py</code> → Python scripts (scotia interaction analysis)</li>
 </ul>
 <hr />
 </div>
 </div>
 <div id="data-specific-information" class="section level2">
 <h2>Data-Specific Information</h2>
-<div id="raw-data-stored-in-data" class="section level3">
-<h3>1. Raw data stored in /data/</h3>
-<p>Contains intermediate CosMx-derived tables used during
-preprocessing.</p>
-<p>Typical files include:</p>
+<div id="raw-data-data" class="section level3">
+<h3>Raw Data (<code>/data/</code>)</h3>
+<p>CosMx-exported RNA tables per FOV:</p>
 <ul>
-<li><code>exprMat.csv</code> – gene-by-cell expression matrix</li>
-<li><code>metadata.csv</code> – cell-level metadata</li>
+<li><code>exprMat.csv</code> – gene-by-cell expression matrix<br />
+</li>
+<li><code>metadata.csv</code> – cell-level metadata<br />
+</li>
 <li><code>tx_file.csv</code> – transcript-level molecule table</li>
 </ul>
-<p>Common columns:</p>
+<p>Important metadata columns:</p>
 <ul>
-<li><code>cell_ID</code> – unique cell identifier<br />
+<li><code>cell_ID</code><br />
 </li>
-<li><code>target_name</code> – gene target<br />
+<li><code>target_name</code><br />
 </li>
-<li><code>x_global_px</code>, <code>y_global_px</code> – global spatial
-coordinates<br />
+<li><code>x_global_px</code>, <code>y_global_px</code><br />
 </li>
-<li><code>Area</code> – segmentation polygon area</li>
+<li><code>Area</code></li>
 </ul>
 <p>Missing values are encoded as <code>NA</code>.</p>
 <hr />
 </div>
-<div id="analysiscosmx_rnamolecules" class="section level3">
-<h3>2. /analysis/CosMx_RNA/Molecules/</h3>
+</div>
+<div id="directory-molecules" class="section level2">
+<h2>Directory: <code>Molecules/</code></h2>
 <p>Contains molecule-level raw input exported from CosMx.</p>
-<p>Typical columns:</p>
+<p>Columns:</p>
 <ul>
 <li><code>TargetName</code> – gene name<br />
 </li>
@@ -488,108 +460,92 @@ coordinates<br />
 </ul>
 <hr />
 </div>
-<div id="analysiscosmx_rnapolygons" class="section level3">
-<h3>3. /analysis/CosMx_RNA/Polygons/</h3>
-<p>Contains segmentation polygons for each cell.<br />
-Used for visualization, spatial QC, and interaction analysis.</p>
-<hr />
-</div>
-<div id="analysiscosmx_rnamolecules-1" class="section level3">
-<h3>4. analysis/CosMx_RNA/Molecules/</h3>
-<p>Includes all Seurat objects generated during the workflow:</p>
+<div id="directory-polygons" class="section level2">
+<h2>Directory: <code>Polygons/</code></h2>
+<p>One CSV per FOV containing:</p>
 <ul>
-<li><code>qc_seurat.RDS</code> – unfiltered raw object<br />
+<li>Cell IDs<br />
 </li>
-<li><code>qc_seurat_pass.RDS</code> – object after QC filtering<br />
+<li>Polygon vertex coordinates<br />
 </li>
-<li><code>annotated_seurat.RDS</code> – object with supervised cell type
-labels<br />
-</li>
-<li><code>normalized_seurat.RDS</code> – final normalized object for
-analysis</li>
-</ul>
-<p>Assays include:</p>
-<ul>
-<li><code>RNA</code> – gene expression<br />
-</li>
-<li><code>NegProbe</code> – negative probe counts<br />
-</li>
-<li><code>SystemControl</code> – system control probes</li>
+<li>Cell boundaries for visualization and spatial analysis</li>
 </ul>
 <hr />
 </div>
-<div id="analysiscosmx_rnamarkers" class="section level3">
-<h3>5. analysis/CosMx_RNA/Markers/</h3>
-<p>Contains marker gene lists and marker-based QC plots.<br />
-Files include <code>markers_global.csv</code> and
-<code>*_markers.png</code>.</p>
-<hr />
-</div>
-<div id="analysiscosmx_rnaresults" class="section level3">
-<h3>6. analysis/CosMx_RNA/Results/</h3>
-<p>Contains all exported results used for figure generation:</p>
+<div id="directory-objects" class="section level2">
+<h2>Directory: <code>Objects/</code></h2>
+<p>Contains all Seurat objects:</p>
 <ul>
-<li>Abundance summaries<br />
+<li><code>qc_seurat.RDS</code> – unfiltered object<br />
 </li>
-<li>Enrichment matrices<br />
+<li><code>qc_seurat_pass.RDS</code> – QC-filtered object<br />
 </li>
-<li>Normalized counts<br />
+<li><code>annotated_seurat.RDS</code> – object with supervised
+annotation<br />
 </li>
-<li>Cell-level annotation tables</li>
+<li><code>normalized_seurat.RDS</code> – final normalized object</li>
 </ul>
-</div>
-<div id="analysiscosmx_rnafiles" class="section level3">
-<h3>7. analysis/CosMx_RNA/Files/</h3>
-<p>Contains intermediate files. Irrelevant.</p>
-<hr />
-</div>
-</div>
-<div id="methodology" class="section level2">
-<h2>Methodology</h2>
-<div id="instruments-and-data-collection" class="section level3">
-<h3>Instruments and Data Collection</h3>
-<p>Data were produced using <strong>NanoString CosMx™ Spatial
-RNA</strong> (2023).<br />
-Raw spatial tables were exported from CosMx nCounter software.</p>
-</div>
-<div id="software-and-tools" class="section level3">
-<h3>Software and Tools</h3>
+<p>Assays included:</p>
 <ul>
-<li>Seurat (preprocessing, QC, annotation)</li>
-<li>InSituType (supervised annotation)</li>
-<li>Harmony (integration)</li>
-<li>ggplot2 (visualization)</li>
-<li>Python scotia (cell–cell interaction)</li>
+<li><strong>RNA</strong> – gene expression<br />
+</li>
+<li><strong>NegProbe</strong> – negative probe counts<br />
+</li>
+<li><strong>SystemControl</strong> – system control probes</li>
 </ul>
 <hr />
 </div>
-</div>
-<div id="workflow-summary" class="section level2">
-<h2>Workflow Summary</h2>
-<div id="step-0-curation-and-qc-0_curation.r" class="section level3">
-<h3>Step 0 – Curation and QC (<code>0_curation.R</code>)</h3>
+<div id="directory-markers" class="section level2">
+<h2>Directory: <code>Markers/</code></h2>
+<p>Contains marker gene lists and marker-based QC plots:</p>
 <ul>
-<li><p>Load raw tables<br />
+<li><code>markers_global.csv</code><br />
+</li>
+<li><code>*_markers.png</code></li>
+</ul>
+<hr />
+</div>
+<div id="directory-results" class="section level2">
+<h2>Directory: <code>Results/</code></h2>
+<p>Contains final outputs:</p>
+<ul>
+<li>UMAP and PCA embeddings<br />
+</li>
+<li>Cell type annotation tables<br />
+</li>
+<li>Abundance and enrichment matrices<br />
+</li>
+<li>Cell–cell interaction results<br />
+</li>
+<li>Visualizations for manuscript figures</li>
+</ul>
+<hr />
+</div>
+<div id="directory-files" class="section level2">
+<h2>Directory: <code>Files/</code></h2>
+<p>Intermediate files not used for downstream analysis.</p>
+<hr />
+</div>
+<div id="workflow" class="section level2">
+<h2>Workflow</h2>
+<div id="step-0-curation-qc-0_curation.r" class="section level3">
+<h3>Step 0 – Curation &amp; QC (<code>0_curation.R</code>)</h3>
+<ul>
+<li><p>Load raw RNA tables<br />
 </p></li>
-<li><p>Create Seurat object<br />
+<li><p>Build Seurat object (<code>RNA</code>, <code>NegProbe</code>,
+<code>SystemControl</code> assays)<br />
 </p></li>
-<li><p>Create RNA, Negative Probe, and System Control assays<br />
+<li><p>Append metadata (cell ID, FOV)<br />
 </p></li>
 <li><p>Apply QC filters:</p>
-<ul>
-<li>low counts<br />
-</li>
-<li>high negative probe proportion<br />
-</li>
-<li>low gene complexity<br />
-</li>
-<li>polygon area filtering (Grubbs test)<br />
-</li>
-<li>target-level QC<br />
-</li>
-</ul></li>
-<li><p>Save QC-filtered objects to <code>Objects/</code></p></li>
+<p><strong>QC Flag 1 – Low counts</strong><br />
+<strong>QC Flag 2 – High negative probe proportion</strong><br />
+<strong>QC Flag 3 – Low gene complexity</strong><br />
+<strong>QC Flag 4 – Polygon area outliers (Grubbs test)</strong><br />
+<strong>QC Flag 5 – Target-level QC</strong></p></li>
 </ul>
+<p>Outputs saved to <code>/Objects/</code>.</p>
 <hr />
 </div>
 <div id="step-1-supervised-annotation-1_annotation_supervised.r" class="section level3">
@@ -598,7 +554,7 @@ Raw spatial tables were exported from CosMx nCounter software.</p>
 <ul>
 <li>Load scRNA-seq reference<br />
 </li>
-<li>Select markers<br />
+<li>Select marker genes<br />
 </li>
 <li>Run InSituType supervised classification<br />
 </li>
@@ -613,65 +569,64 @@ Raw spatial tables were exported from CosMx nCounter software.</p>
 </li>
 <li>Perform scaling and PCA<br />
 </li>
-<li>Apply Harmony integration (if used)<br />
+<li>Optional Harmony integration<br />
 </li>
-<li>Export normalized objects to <code>Results/</code></li>
+<li>Export normalized objects to <code>/Results/</code></li>
 </ul>
 <hr />
 </div>
 <div id="step-3-cellcell-interaction" class="section level3">
 <h3>Step 3 – Cell–Cell Interaction</h3>
-<p>Files:<br />
-- <code>3_cell_interaction.R</code><br />
-- <code>scotia_cell_int.py</code></p>
+<p>Files:</p>
+<ul>
+<li><code>3_cell_interaction.R</code><br />
+</li>
+<li><code>scotia_cell_int.py</code></li>
+</ul>
 <p>Steps:</p>
 <ol style="list-style-type: decimal">
 <li>Export coordinates and cell types<br />
 </li>
 <li>Run Python-based scotia interaction analysis<br />
 </li>
-<li>Import results into R for summarization and visualization</li>
+<li>Import results into R for summarization and visualization<br />
+</li>
+<li>Save outputs to <code>/Results/</code></li>
 </ol>
 <hr />
 </div>
-<div id="step-4-abundance-and-enrichment" class="section level3">
-<h3>Step 4 – Abundance and Enrichment</h3>
-<p>File: <code>abundance_enrichment.R</code></p>
+<div id="step-4-abundance-enrichment-abundance_enrichment.r" class="section level3">
+<h3>Step 4 – Abundance &amp; Enrichment
+(<code>abundance_enrichment.R</code>)</h3>
 <p>Computes:</p>
 <ul>
-<li>differential abundance<br />
+<li>Cell type abundance per tissue and patient<br />
 </li>
-<li>enrichment scores<br />
+<li>Enrichment matrices<br />
 </li>
-<li>summary matrices</li>
+<li>Condition-specific differences</li>
 </ul>
+<p>Outputs stored in <code>/Results/</code>.</p>
 <hr />
 </div>
 </div>
-<div id="data-access-and-sharing" class="section level2">
-<h2>Data Access and Sharing</h2>
-<div id="publications-using-this-dataset" class="section level3">
-<h3>Publications Using This Dataset</h3>
-<p>This dataset supports the analysis described in:<br />
+<div id="citation" class="section level2">
+<h2>Citation</h2>
+<p>Bolen et al., 2025.<br />
 <em>Spatial single-cell multiomics reveals peripheral immune dysfunction
 in Parkinson’s and inflammatory bowel disease.</em></p>
+<hr />
 </div>
-<div id="recommended-citation" class="section level3">
-<h3>Recommended Citation</h3>
-<p>Bolen et al., 2025. <em>Spatial single-cell multiomics reveals
-peripheral immune dysfunction in Parkinson’s and inflammatory bowel
-disease.</em></p>
+<div id="funding" class="section level2">
+<h2>Funding</h2>
+<p>“This research was funded by Aligning Science Across Parkinson’s
+(ASAP Grant #) through the Michael J. Fox Foundation for Parkinson’s
+Research (MJFF).”</p>
+<hr />
 </div>
-<div id="license" class="section level3">
-<h3>License</h3>
+<div id="license" class="section level2">
+<h2>License</h2>
 <p>MIT License.</p>
-</div>
-<div id="funding-acknowledgment" class="section level3">
-<h3>Funding Acknowledgment</h3>
-<p>“This research was funded in whole or in part by Aligning Science
-Across Parkinson’s (ASAP Grant #) through the Michael J. Fox Foundation
-for Parkinson’s Research (MJFF).”</p>
-</div>
 </div>
 </div>
 
