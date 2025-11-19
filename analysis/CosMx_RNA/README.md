@@ -3,7 +3,7 @@
 ## General Information
 
 Generated on **18 November 2025**  
-Last modified on **18 November 2025**
+Last modified on **19 November 2025**
 
 This directory contains all scripts, intermediate data structures, and outputs associated with the **CosMx RNA** workflow used in the study *Spatial single-cell multiomics reveals peripheral immune dysfunction in Parkinson’s and inflammatory bowel disease*.
 
@@ -224,7 +224,7 @@ Bolen et al., 2025.
 
 ## Funding
 
-“This research was funded by Aligning Science Across Parkinson’s (ASAP Grant #) through the Michael J. Fox Foundation for Parkinson’s Research (MJFF).”
+“This research was funded by Aligning Science Across Parkinson’s (ASAP-020527) through the Michael J. Fox Foundation for Parkinson’s Research (MJFF).”
 
 ---
 

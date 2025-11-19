@@ -3,7 +3,7 @@
 ## General Information
 
 **Generated:** 12/12/2024
-**Last modified:** 18/11/2025
+**Last modified:** 19/11/2025
 
 This repository contains all scripts, data structures, and figure-generation code used in the study:
 
@@ -171,7 +171,7 @@ Both CosMx RNA and Protein pipelines follow a standardized workflow:
 
 ## Data Access & Funding
 
-This research was funded in whole or in part by Aligning Science Across Parkinson’s (ASAP Grant #) through the Michael J. Fox Foundation for Parkinson’s Research (MJFF).
+This research was funded in whole or in part by Aligning Science Across Parkinson’s (ASAP-020527) through the Michael J. Fox Foundation for Parkinson’s Research (MJFF).
 
 ---
 
